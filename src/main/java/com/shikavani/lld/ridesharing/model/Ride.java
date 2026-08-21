@@ -1,19 +1,27 @@
 package com.shikavani.lld.ridesharing.model;
 
+import com.shikavani.lld.ridesharing.enums.RideStatus;
+import com.shikavani.lld.ridesharing.enums.VehicleType;
 import com.shikavani.lld.ridesharing.state.*;
+import java.util.UUID;
 
 public class Ride {
+
+    private final String rideId;
+    private Passenger passenger;
     private final Location pickup;
     private final Location drop;
-    private final Vehicle vehicle;
+    private final VehicleType vehicleType;
+    private Vehicle vehicle;
     private Driver driver;
     private RideState rideState;
-    private boolean isCancelled;
 
-    public Ride(Location pickup, Location drop, Vehicle vehicle) {
+    public Ride(Passenger passenger, Location pickup, Location drop, VehicleType vehicleType) {
+        this.rideId = UUID.randomUUID().toString();
+        this.passenger = passenger;
         this.pickup = pickup;
         this.drop = drop;
-        this.vehicle = vehicle;
+        this.vehicleType = vehicleType;
         rideState = new RequestRideState();
     }
 
@@ -25,10 +33,29 @@ public class Ride {
         return drop;
     }
 
+    public String getRideId() {
+        return rideId;
+    }
+
+    public Passenger getPassenger() {
+        return passenger;
+    }
+
+    public void setPassenger(Passenger passenger) {
+        this.passenger = passenger;
+    }
+
+    public VehicleType getVehicleType() {
+        return vehicleType;
+    }
+
     public Vehicle getVehicle() {
         return vehicle;
     }
 
+    public void setVehicle(Vehicle vehicle){
+        this.vehicle = vehicle;
+    }
     public Driver getDriver() {
         return driver;
     }
@@ -37,15 +64,11 @@ public class Ride {
         this.driver = driver;
     }
 
-    public boolean isCancelled() {
-        return isCancelled;
+    public RideStatus getStatus(){
+        return rideState.status();
     }
 
-    public void setCancelled(boolean cancelled) {
-        isCancelled = cancelled;
-    }
-
-    public void next(RideState state){
+    protected void next(RideState state){
         this.rideState = state;
     }
 

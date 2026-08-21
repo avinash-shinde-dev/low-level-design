@@ -1,7 +1,7 @@
 package com.shikavani.lld.ridesharing.model;
 
 public sealed class User permits Passenger, Driver {
-    private String userId;
+    private final String userId;
     private String name;
     private String email;
     private String phoneNo;
@@ -15,12 +15,9 @@ public sealed class User permits Passenger, Driver {
         this.location = location;
     }
 
+    // The userId should be immutable so we don't need the setter method.
     public String getUserId() {
         return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
     }
 
     public String getName() {

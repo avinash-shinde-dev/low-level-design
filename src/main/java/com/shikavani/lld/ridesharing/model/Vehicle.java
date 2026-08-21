@@ -1,18 +1,20 @@
 package com.shikavani.lld.ridesharing.model;
 
-
+import com.shikavani.lld.ridesharing.enums.VehicleType;
 // Vehicle should be extensible that's why we are not marking it as sealed
 public class Vehicle {
      private String brand;
      private String model;
      private String licensePlate;
      private Integer manufacturingYear;
+     private VehicleType vehicleType;
 
-    public Vehicle(String brand, String model, String licensePlate, Integer manufacturingYear) {
+    public Vehicle(String brand, String model, String licensePlate, Integer manufacturingYear, VehicleType vehicleType) {
         this.brand = brand;
         this.model = model;
         this.licensePlate = licensePlate;
         this.manufacturingYear = manufacturingYear;
+        this.vehicleType = vehicleType;
     }
 
     public String getBrand() {
@@ -47,6 +49,13 @@ public class Vehicle {
         this.manufacturingYear = manufacturingYear;
     }
 
+    public VehicleType getVehicleType() {
+        return vehicleType;
+    }
+
+    public void setVehicleType(VehicleType vehicleType) {
+        this.vehicleType = vehicleType;
+    }
     @Override
     public String toString() {
         return "Vehicle{" +
@@ -54,6 +63,7 @@ public class Vehicle {
                 ", model='" + model + '\'' +
                 ", licensePlate='" + licensePlate + '\'' +
                 ", manufacturingYear=" + manufacturingYear +
+                ", vehicleType=" + vehicleType +
                 '}';
     }
 }
