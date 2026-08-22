@@ -6,7 +6,7 @@ public record Location(double latitude, double longitude ) {
             throw new IllegalArgumentException("Invalid latitude ");
         }
         if (longitude < -90 || longitude > 90) {
-            throw new IllegalArgumentException("Invalid latitude ");
+            throw new IllegalArgumentException("Invalid longitude ");
         }
     }
 }
