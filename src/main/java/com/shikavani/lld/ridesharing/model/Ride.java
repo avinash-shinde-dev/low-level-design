@@ -82,6 +82,10 @@ public class Ride {
         this.rideState.assignDriver(this, driver);
     }
 
+    public void reject(){
+        this.rideState.reject(this);
+    }
+
     public void arrived(){
         this.rideState.driverArrived(this);
     }
