@@ -12,6 +12,7 @@ public final class DriverAssignedState extends AbstractRideState {
 
     @Override
     public void accept(Ride ride) {
+        System.out.println("Your ride has been accepted");
         ride.getDriver().setStatus(DriverStatus.BUSY);
         ride.next(new RideAcceptedState());
     }

@@ -21,6 +21,7 @@ abstract class AbstractRideState implements RideState {
     protected void releaseDriver(Ride ride) {
         Driver driver = ride.getDriver();
         if (driver != null) driver.setStatus(DriverStatus.ONLINE);
+        System.out.println("Driver has been released.");
     }
 
     protected void clearAssignment(Ride ride) {
