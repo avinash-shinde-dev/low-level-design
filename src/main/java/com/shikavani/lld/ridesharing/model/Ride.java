@@ -2,7 +2,9 @@ package com.shikavani.lld.ridesharing.model;
 
 import com.shikavani.lld.ridesharing.enums.RideStatus;
 import com.shikavani.lld.ridesharing.enums.VehicleType;
-import com.shikavani.lld.ridesharing.state.*;
+import com.shikavani.lld.ridesharing.state.RideRequestedState;
+import com.shikavani.lld.ridesharing.state.RideState;
+
 import java.util.UUID;
 
 public class Ride {
@@ -22,7 +24,7 @@ public class Ride {
         this.pickup = pickup;
         this.drop = drop;
         this.vehicleType = vehicleType;
-        rideState = new RequestRideState();
+        rideState = new RideRequestedState();
     }
 
     public Location getPickup() {
@@ -68,42 +70,35 @@ public class Ride {
         return rideState.status();
     }
 
-    protected void next(RideState state){
+    public void next(RideState state){
         this.rideState = state;
     }
 
     public void requestRide(){
-        this.rideState.requestRide(this);
-        this.next(new AssignedDriverState());
+        this.rideState.request(this);
     }
 
     public void assignDriver(Driver driver){
         this.rideState.assignDriver(this, driver);
-        this.next(new AcceptState());
+    }
+
+    public void arrived(){
+        this.rideState.driverArrived(this);
     }
 
     public void accept(){
         this.rideState.accept(this);
-        this.next(new StartState());
-    }
-
-    public void reject(){
-        this.rideState.reject(this);
-        this.next(new AssignedDriverState());
     }
 
     public void start(){
         this.rideState.start(this);
-        this.next(new CompleteState());
     }
 
     public void complete(){
         this.rideState.complete(this);
-        this.next(new RequestRideState());
     }
 
     public void cancelled(){
-        this.rideState.cancelled(this);
-        this.next(new RequestRideState());
+        this.rideState.cancel(this);
     }
 }
