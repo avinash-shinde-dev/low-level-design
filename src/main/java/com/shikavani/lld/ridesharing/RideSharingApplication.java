@@ -35,16 +35,19 @@ public class RideSharingApplication {
         Location driver3Location = new Location(14.13, 60.542);
         Driver driver3 = new Driver("d103", "Sachin", "Sachin@gmail.com", "9878675643", driver3Location, DriverStatus.ONLINE, vehicle4);
 
-        // Add drivers
+        // driver repository
         DriverRepository driverRepository = new DriverRepository();
-        DriverService driverService = new DriverService(driverRepository);
+
+        // Ride Service
+        RideService rideService = new RideService(new RideRepository(), driverRepository);
+
+        // Driver Service
+        DriverService driverService = new DriverService(driverRepository, rideService);
         driverService.addDriver(driver1);
         driverService.addDriver(driver2);
         driverService.addDriver(driver3);
 
         System.out.println(driverService.getAvailableDrivers());
-        // Ride Service
-        RideService rideService = new RideService(new RideRepository(), driverService);
 
         PassengerRepository passengerRepository = new PassengerRepository();
         // Create PassengerService

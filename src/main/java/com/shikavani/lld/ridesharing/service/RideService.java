@@ -17,8 +17,8 @@ public class RideService {
     private final RideMatchingStrategy rideMatchingStrategy;
     private final RideRepository rideRepository;
 
-    public RideService(RideRepository rideRepository, DriverService driverService) {
-        this.rideMatchingStrategy = RideMatchingStrategyFactory.getRideMatchingStrategy(RideMatchingStrategyType.NEAREST_AVAILABLE, driverService);
+    public RideService(RideRepository rideRepository, DriverRepository driverRepository) {
+        this.rideMatchingStrategy = RideMatchingStrategyFactory.getRideMatchingStrategy(RideMatchingStrategyType.NEAREST_AVAILABLE, driverRepository);
         this.rideRepository = rideRepository;
     }
 
