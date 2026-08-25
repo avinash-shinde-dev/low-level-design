@@ -12,25 +12,22 @@ public final class RideRequestedState extends AbstractRideState {
     }
 
     @Override
-    public void request(Ride ride) {
+    public RideState request(Ride ride) {
         // A Ride is created in REQUESTED state; requesting it again is harmless.
+        return new RideRequestedState();
     }
 
-    // This
     @Override
-    public void assignDriver(Ride ride, Driver driver) {
+    public RideState assignDriver(Ride ride, Driver driver) {
         if (driver == null || driver.getVehicle() == null) {
             throw new IllegalArgumentException("An assigned driver must have a vehicle");
         }
-
-        ride.setDriver(driver);
-        ride.setVehicle(driver.getVehicle());
-        ride.next(new DriverAssignedState());
+        return new DriverAssignedState();
     }
 
     @Override
-    public void cancel(Ride ride) {
+    public RideState cancel(Ride ride) {
         System.out.println("Ride has been cancelled.");
-        ride.next(new RideCancelledState());
+        return new RideCancelledState();
     }
 }

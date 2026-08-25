@@ -59,21 +59,16 @@ public class Ride {
         return vehicle;
     }
 
-    public void setVehicle(Vehicle vehicle){
-        this.vehicle = vehicle;
-    }
-
     public Driver getDriver() {
         return driver;
     }
 
-    public void setDriver(Driver driver) {
-        this.driver = driver;
-    }
-
     public void rejectDriver(Driver driver){
+        RideState nextState = this.rideState.reject(this);
         this.rejectedDriverIds.add(driver.getUserId());
-        rideState.reject(this);
+        this.driver = null;
+        this.vehicle = null;
+        this.rideState = nextState;
     }
     public boolean wasRejectedBy(Driver driver){
         return this.rejectedDriverIds.contains(driver.getUserId());
@@ -83,35 +78,34 @@ public class Ride {
         return rideState.status();
     }
 
-    public void next(RideState state){
-        this.rideState = state;
-    }
-
     public void requestRide(){
-        this.rideState.request(this);
+        this.rideState = this.rideState.request(this);
     }
 
     public void assignDriver(Driver driver){
-        this.rideState.assignDriver(this, driver);
+        RideState nextState = this.rideState.assignDriver(this, driver);
+        this.driver = driver;
+        this.vehicle = driver.getVehicle();
+        this.rideState = nextState;
     }
 
     public void arrived(){
-        this.rideState.driverArrived(this);
+        this.rideState = this.rideState.driverArrived(this);
     }
 
     public void accept(){
-        this.rideState.accept(this);
+        this.rideState = this.rideState.accept(this);
     }
 
     public void start(){
-        this.rideState.start(this);
+        this.rideState = this.rideState.start(this);
     }
 
     public void complete(){
-        this.rideState.complete(this);
+        this.rideState = this.rideState.complete(this);
     }
 
     public void cancelled(){
-        this.rideState.cancel(this);
+        this.rideState = this.rideState.cancel(this);
     }
 }
