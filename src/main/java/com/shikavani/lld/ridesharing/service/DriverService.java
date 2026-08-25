@@ -9,9 +9,11 @@ import java.util.List;
 
 public class DriverService {
     private final DriverRepository driverRepository;
+    private final RideService rideService;
 
-    public DriverService(DriverRepository driverRepository) {
+    public DriverService(DriverRepository driverRepository, RideService rideService) {
         this.driverRepository = driverRepository;
+        this.rideService = rideService;
     }
 
     public void addDriver(Driver driver){
@@ -25,10 +27,10 @@ public class DriverService {
     }
 
     public void accept(Ride ride){
-         ride.accept();
+         rideService.acceptRide(ride);
     }
 
     public void reject(Ride ride){
-        ride.reject();
+        rideService.rejectRide(ride);
     }
 }

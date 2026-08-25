@@ -22,9 +22,11 @@ public class NearestAvailableDriverAssignmentStrategy implements RideMatchingStr
         // 2. filter the online drivers with requested vehicle type
         // 3. Calculate the distance between the passenger's pickup location and each driver's current location.
         // 4. Select the driver with the minimum distance.
+        // 5. if the ride was rejected by any driver, then the next closest driver should be assinged
         return this.driverService.getAvailableDrivers()
                 .stream()
                 .filter(driver -> driver.getVehicle().getVehicleType().equals(ride.getVehicleType()))
+                .filter(driver -> !ride.wasRejectedBy(driver))
                 .min(Comparator.comparingDouble(driver -> distanceCalculator.calculate(
                                 driver.getLocation(),
                                 ride.getPickup()

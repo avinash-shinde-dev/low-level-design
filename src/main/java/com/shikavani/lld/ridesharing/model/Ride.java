@@ -5,6 +5,8 @@ import com.shikavani.lld.ridesharing.enums.VehicleType;
 import com.shikavani.lld.ridesharing.state.RideRequestedState;
 import com.shikavani.lld.ridesharing.state.RideState;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 public class Ride {
@@ -17,6 +19,7 @@ public class Ride {
     private Vehicle vehicle;
     private Driver driver;
     private RideState rideState;
+    private final Set<String> rejectedDriverIds;
 
     public Ride(Passenger passenger, Location pickup, Location drop, VehicleType vehicleType) {
         this.rideId = UUID.randomUUID().toString();
@@ -25,6 +28,7 @@ public class Ride {
         this.drop = drop;
         this.vehicleType = vehicleType;
         rideState = new RideRequestedState();
+        this.rejectedDriverIds = new HashSet<>();
     }
 
     public Location getPickup() {
@@ -58,12 +62,21 @@ public class Ride {
     public void setVehicle(Vehicle vehicle){
         this.vehicle = vehicle;
     }
+
     public Driver getDriver() {
         return driver;
     }
 
     public void setDriver(Driver driver) {
         this.driver = driver;
+    }
+
+    public void rejectDriver(Driver driver){
+        this.rejectedDriverIds.add(driver.getUserId());
+        rideState.reject(this);
+    }
+    public boolean wasRejectedBy(Driver driver){
+        return this.rejectedDriverIds.contains(driver.getUserId());
     }
 
     public RideStatus getStatus(){
@@ -80,10 +93,6 @@ public class Ride {
 
     public void assignDriver(Driver driver){
         this.rideState.assignDriver(this, driver);
-    }
-
-    public void reject(){
-        this.rideState.reject(this);
     }
 
     public void arrived(){

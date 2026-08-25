@@ -27,14 +27,27 @@ public class RideService {
         Ride ride = new Ride(passenger, pickup, drop, vehicleType);
         ride.requestRide();
         // Assign the driver
-        Optional<Driver> driver = this.rideMatchingStrategy.match(ride);
-        driver.ifPresent(d -> {
-            d.setStatus(DriverStatus.BUSY);
-            ride.assignDriver(d);
-        });
+        attemptDriverAssignment(ride);
         // save the ride
         rideRepository.save(ride);
         return ride;
+    }
+
+    public void acceptRide(Ride ride){
+         ride.accept();
+    }
+
+    public void rejectRide(Ride ride){
+        ride.rejectDriver(ride.getDriver());
+        attemptDriverAssignment(ride);
+    }
+
+    private void attemptDriverAssignment(Ride ride) {
+        this.rideMatchingStrategy.match(ride)
+                .ifPresent(driver -> {
+                    driver.setStatus(DriverStatus.BUSY);
+                    ride.assignDriver(driver);
+                });
     }
 
 
