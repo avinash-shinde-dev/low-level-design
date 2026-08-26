@@ -16,10 +16,12 @@ public class RideService {
 
     private final RideMatchingStrategy rideMatchingStrategy;
     private final RideRepository rideRepository;
+    private final FareCalculationService fareCalculationService;
 
-    public RideService(RideRepository rideRepository, DriverRepository driverRepository) {
+    public RideService(RideRepository rideRepository, DriverRepository driverRepository, FareCalculationService fareCalculationService) {
         this.rideMatchingStrategy = RideMatchingStrategyFactory.getRideMatchingStrategy(RideMatchingStrategyType.NEAREST_AVAILABLE, driverRepository);
         this.rideRepository = rideRepository;
+        this.fareCalculationService = fareCalculationService;
     }
 
     public Ride requestRide(Passenger passenger, Location pickup, Location drop, VehicleType vehicleType ){
@@ -48,6 +50,10 @@ public class RideService {
                     driver.setStatus(DriverStatus.BUSY);
                     ride.assignDriver(driver);
                 });
+    }
+
+    public Fare calcuateFare(TripDetails tripDetails){
+        return this.fareCalculationService.calculateFare(tripDetails);
     }
 
 
