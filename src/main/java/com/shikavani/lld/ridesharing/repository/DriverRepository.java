@@ -1,13 +1,12 @@
 package com.shikavani.lld.ridesharing.repository;
 
-import com.shikavani.lld.ridesharing.enums.DriverStatus;
 import com.shikavani.lld.ridesharing.model.Driver;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DriverRepository implements InMemoryRepository<Driver> {
+public class DriverRepository implements InMemoryRepository<String, Driver> {
     private final Map<String, Driver> driverMap = new HashMap<>();
     @Override
     public void save(Driver driver) {

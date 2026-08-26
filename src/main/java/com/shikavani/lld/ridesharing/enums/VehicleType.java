@@ -4,6 +4,5 @@ public enum VehicleType {
     TWO_WHEELER,
     HATCHBACK,
     SEDAN,
-    SUV,
-    ELECTRIC
+    SUV
 }

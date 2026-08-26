@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class PassengerRepository implements InMemoryRepository<Passenger> {
+public class PassengerRepository implements InMemoryRepository<String, Passenger> {
     private final Map<String, Passenger> passengerMap = new HashMap<>();
     @Override
     public void save(Passenger passenger) {
