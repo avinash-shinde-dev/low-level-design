@@ -1,14 +1,21 @@
 package com.shikavani.lld.ridesharing;
 
 import com.shikavani.lld.ridesharing.enums.DriverStatus;
+import com.shikavani.lld.ridesharing.enums.FareCalculationStrategyType;
 import com.shikavani.lld.ridesharing.enums.VehicleType;
 import com.shikavani.lld.ridesharing.model.*;
 import com.shikavani.lld.ridesharing.repository.DriverRepository;
 import com.shikavani.lld.ridesharing.repository.PassengerRepository;
 import com.shikavani.lld.ridesharing.repository.RideRepository;
 import com.shikavani.lld.ridesharing.service.DriverService;
+import com.shikavani.lld.ridesharing.service.FareCalculationService;
 import com.shikavani.lld.ridesharing.service.PassengerService;
 import com.shikavani.lld.ridesharing.service.RideService;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalUnit;
 
 public class RideSharingApplication {
 
@@ -38,8 +45,9 @@ public class RideSharingApplication {
         // driver repository
         DriverRepository driverRepository = new DriverRepository();
 
+        FareCalculationService fareCalculationService = new FareCalculationService();
         // Ride Service
-        RideService rideService = new RideService(new RideRepository(), driverRepository);
+        RideService rideService = new RideService(new RideRepository(), driverRepository, fareCalculationService);
 
         // Driver Service
         DriverService driverService = new DriverService(driverRepository, rideService);
@@ -59,6 +67,10 @@ public class RideSharingApplication {
         Ride ride = passengerService.requestRide(passenger, passengerLocation, dropLocation, VehicleType.HATCHBACK );
 
         driverService.accept(ride);
+
+        TripDetails tripDetails = new TripDetails(10.2, Instant.now().minus(25, ChronoUnit.MINUTES), ride.getVehicleType(), FareCalculationStrategyType.SHARED);
+        Fare fare = rideService.calcuateFare(tripDetails);
+        System.out.println("Fare for this ride: " + fare.getAmount() + fare.getCurrency().getSymbol());
 
     }
 }
