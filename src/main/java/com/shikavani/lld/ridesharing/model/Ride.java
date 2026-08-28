@@ -19,6 +19,7 @@ public class Ride {
     private Vehicle vehicle;
     private Driver driver;
     private RideState rideState;
+    private TripDetails tripDetails;
     private final Set<String> rejectedDriverIds;
 
     public Ride(Passenger passenger, Location pickup, Location drop, VehicleType vehicleType) {
@@ -61,6 +62,14 @@ public class Ride {
 
     public Driver getDriver() {
         return driver;
+    }
+
+    public TripDetails getTripDetails(){
+        return this.tripDetails;
+    }
+
+    public void setTripDetails(TripDetails tripDetails) {
+        this.tripDetails = tripDetails;
     }
 
     public void rejectDriver(Driver driver){
@@ -107,5 +116,19 @@ public class Ride {
 
     public void cancelled(){
         this.rideState = this.rideState.cancel(this);
+    }
+
+    @Override
+    public String toString() {
+        return "Ride{" +
+                "rideId='" + rideId + '\'' +
+                ", passenger=" + passenger +
+                ", pickup=" + pickup +
+                ", drop=" + drop +
+                ", vehicleType=" + vehicleType +
+                ", vehicle=" + vehicle +
+                ", driver=" + driver +
+                ", rideState=" + rideState +
+                '}';
     }
 }

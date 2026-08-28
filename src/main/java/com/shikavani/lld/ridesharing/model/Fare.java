@@ -28,5 +28,10 @@ public class Fare {
     public void setCurrency(Currency currency) {
         this.currency = currency;
     }
+
+    @Override
+    public String toString() {
+        return amount.toString() + currency.getSymbol();
+    }
 }
 
