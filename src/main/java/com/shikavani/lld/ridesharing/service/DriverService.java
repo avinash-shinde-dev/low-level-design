@@ -30,6 +30,18 @@ public class DriverService {
          rideService.acceptRide(ride);
     }
 
+    public void arrive(Ride ride){
+        rideService.arrive(ride);
+    }
+
+    public void start(Ride ride){
+         rideService.startRide(ride);
+    }
+
+    public void complete(Ride ride){
+        rideService.completeRide(ride);
+    }
+
     public void reject(Ride ride){
         rideService.rejectRide(ride);
     }

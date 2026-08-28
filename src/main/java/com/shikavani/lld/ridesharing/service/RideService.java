@@ -39,6 +39,22 @@ public class RideService {
          ride.accept();
     }
 
+    public void arrive(Ride ride){
+        ride.arrived();
+    }
+
+    public void startRide(Ride ride){
+        ride.start();
+    }
+
+    public void completeRide(Ride ride){
+        ride.complete();
+    }
+
+    public void cancelRide(Ride ride){
+        ride.cancelled();
+    }
+
     public void rejectRide(Ride ride){
         ride.rejectDriver(ride.getDriver());
         attemptDriverAssignment(ride);
