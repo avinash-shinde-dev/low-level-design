@@ -2,15 +2,14 @@ package com.shikavani.lld.ridesharing;
 
 import com.shikavani.lld.ridesharing.enums.DriverStatus;
 import com.shikavani.lld.ridesharing.enums.FareCalculationStrategyType;
+import com.shikavani.lld.ridesharing.enums.PaymentStrategyType;
 import com.shikavani.lld.ridesharing.enums.VehicleType;
+import com.shikavani.lld.ridesharing.exception.PaymentNotAllowedException;
 import com.shikavani.lld.ridesharing.model.*;
 import com.shikavani.lld.ridesharing.repository.DriverRepository;
 import com.shikavani.lld.ridesharing.repository.PassengerRepository;
 import com.shikavani.lld.ridesharing.repository.RideRepository;
-import com.shikavani.lld.ridesharing.service.DriverService;
-import com.shikavani.lld.ridesharing.service.FareCalculationService;
-import com.shikavani.lld.ridesharing.service.PassengerService;
-import com.shikavani.lld.ridesharing.service.RideService;
+import com.shikavani.lld.ridesharing.service.*;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -19,7 +18,7 @@ import java.time.temporal.TemporalUnit;
 
 public class RideSharingApplication {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws PaymentNotAllowedException {
         // 1. create passenger
         Location passengerLocation = new Location(18.244, 57.324);
         Location passengerLocation2 = new Location(28.244, -37.324);
@@ -68,9 +67,26 @@ public class RideSharingApplication {
 
         driverService.accept(ride);
 
+        System.out.println("Waiting for driver to arrived..");
+
+        driverService.arrive(ride);
+
+        driverService.start(ride);
+
+        driverService.complete(ride);
+
         TripDetails tripDetails = new TripDetails(10.2, Instant.now().minus(25, ChronoUnit.MINUTES), ride.getVehicleType(), FareCalculationStrategyType.SHARED);
         Fare fare = rideService.calcuateFare(tripDetails);
         System.out.println("Fare for this ride: " + fare.getAmount() + fare.getCurrency().getSymbol());
+
+        System.out.println("Proceed with payments");
+
+        PaymentRequest paymentRequest = new PaymentRequest(ride, fare, PaymentStrategyType.UPI, new UPIDetails("avinash@oksbi", "1234"));
+
+        PaymentService paymentService = new PaymentService(rideService);
+        PaymentResponse response = paymentService.payment(paymentRequest);
+        System.out.println(response);
+
 
     }
 }
