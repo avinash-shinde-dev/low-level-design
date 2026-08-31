@@ -25,6 +25,8 @@ public class Ride implements RideObservable {
     private Driver driver;
     private RideState rideState;
     private TripDetails tripDetails;
+    private Rating driverRating;
+    private Rating passengerRating;
     private final Set<String> rejectedDriverIds;
     private final List<RideObserver> observers;
 
@@ -94,6 +96,24 @@ public class Ride implements RideObservable {
 
     public void setTripDetails(TripDetails tripDetails) {
         this.tripDetails = tripDetails;
+    }
+
+    public Rating getDriverRating() {
+        return driverRating;
+    }
+
+    public void setDriverRating(Rating driverRating) {
+        System.out.println("Rating for Driver: " + driverRating.value());
+        this.driverRating = driverRating;
+    }
+
+    public Rating getPassengerRating() {
+        return passengerRating;
+    }
+
+    public void setPassengerRating(Rating passengerRating) {
+        System.out.println("Rating for Passenger: " + passengerRating.value());
+        this.passengerRating = passengerRating;
     }
 
     public void rejectDriver(Driver driver){

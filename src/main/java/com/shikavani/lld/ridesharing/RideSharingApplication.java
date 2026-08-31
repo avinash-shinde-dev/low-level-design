@@ -88,6 +88,11 @@ public class RideSharingApplication {
         PaymentResponse response = paymentService.payment(paymentRequest);
         System.out.println(response);
 
+        RatingService ratingService = new RatingService();
+
+        ratingService.rateDriver(ride, passenger, new Rating(4));
+        ratingService.ratePassenger(ride, driver2, new Rating(5));
+
 
     }
 }
