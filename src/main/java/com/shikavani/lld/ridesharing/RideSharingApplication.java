@@ -45,8 +45,9 @@ public class RideSharingApplication {
         DriverRepository driverRepository = new DriverRepository();
 
         FareCalculationService fareCalculationService = new FareCalculationService();
+        NotificationService notificationService = new NotificationService();
         // Ride Service
-        RideService rideService = new RideService(new RideRepository(), driverRepository, fareCalculationService);
+        RideService rideService = new RideService(new RideRepository(), driverRepository, fareCalculationService, notificationService);
 
         // Driver Service
         DriverService driverService = new DriverService(driverRepository, rideService);

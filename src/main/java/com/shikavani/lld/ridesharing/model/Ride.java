@@ -2,14 +2,19 @@ package com.shikavani.lld.ridesharing.model;
 
 import com.shikavani.lld.ridesharing.enums.RideStatus;
 import com.shikavani.lld.ridesharing.enums.VehicleType;
+import com.shikavani.lld.ridesharing.observer.RideObservable;
+import com.shikavani.lld.ridesharing.observer.RideObserver;
 import com.shikavani.lld.ridesharing.state.RideRequestedState;
 import com.shikavani.lld.ridesharing.state.RideState;
 
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-public class Ride {
+public class Ride implements RideObservable {
 
     private final String rideId;
     private Passenger passenger;
@@ -21,6 +26,7 @@ public class Ride {
     private RideState rideState;
     private TripDetails tripDetails;
     private final Set<String> rejectedDriverIds;
+    private final List<RideObserver> observers;
 
     public Ride(Passenger passenger, Location pickup, Location drop, VehicleType vehicleType) {
         this.rideId = UUID.randomUUID().toString();
@@ -30,6 +36,24 @@ public class Ride {
         this.vehicleType = vehicleType;
         rideState = new RideRequestedState();
         this.rejectedDriverIds = new HashSet<>();
+        this.observers = new ArrayList<>();
+    }
+
+    @Override
+    public void addObserver(RideObserver observer) {
+        this.observers.add(observer);
+    }
+
+    @Override
+    public void removeObserver(RideObserver observer) {
+        this.observers.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers(RideStateChangeEvent event) {
+        for (RideObserver observer : observers) {
+            observer.onRideStateChanged(event);
+        }
     }
 
     public Location getPickup() {
@@ -73,11 +97,13 @@ public class Ride {
     }
 
     public void rejectDriver(Driver driver){
+        RideStatus oldStatus = this.rideState.status();
         RideState nextState = this.rideState.reject(this);
         this.rejectedDriverIds.add(driver.getUserId());
         this.driver = null;
         this.vehicle = null;
         this.rideState = nextState;
+        notifyObservers(new RideStateChangeEvent(this, oldStatus, this.rideState.status(), Instant.now()));
     }
     public boolean wasRejectedBy(Driver driver){
         return this.rejectedDriverIds.contains(driver.getUserId());
@@ -92,30 +118,42 @@ public class Ride {
     }
 
     public void assignDriver(Driver driver){
+        RideStatus oldStatus = this.rideState.status();
         RideState nextState = this.rideState.assignDriver(this, driver);
         this.driver = driver;
         this.vehicle = driver.getVehicle();
         this.rideState = nextState;
+        notifyObservers(new RideStateChangeEvent(this, oldStatus, this.rideState.status(), Instant.now()));
     }
 
     public void arrived(){
+        RideStatus oldStatus = this.rideState.status();
         this.rideState = this.rideState.driverArrived(this);
+        notifyObservers(new RideStateChangeEvent(this, oldStatus, this.rideState.status(), Instant.now()));
     }
 
     public void accept(){
+        RideStatus oldStatus = this.rideState.status();
         this.rideState = this.rideState.accept(this);
+        notifyObservers(new RideStateChangeEvent(this, oldStatus, this.rideState.status(), Instant.now()));
     }
 
     public void start(){
+        RideStatus oldStatus = this.rideState.status();
         this.rideState = this.rideState.start(this);
+        notifyObservers(new RideStateChangeEvent(this, oldStatus, this.rideState.status(), Instant.now()));
     }
 
     public void complete(){
+        RideStatus oldStatus = this.rideState.status();
         this.rideState = this.rideState.complete(this);
+        notifyObservers(new RideStateChangeEvent(this, oldStatus, this.rideState.status(), Instant.now()));
     }
 
     public void cancelled(){
+        RideStatus oldStatus = this.rideState.status();
         this.rideState = this.rideState.cancel(this);
+        notifyObservers(new RideStateChangeEvent(this, oldStatus, this.rideState.status(), Instant.now()));
     }
 
     @Override
