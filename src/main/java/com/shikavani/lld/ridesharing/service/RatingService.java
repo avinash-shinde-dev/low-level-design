@@ -9,6 +9,9 @@ import com.shikavani.lld.ridesharing.model.Ride;
 public class RatingService {
 
     public void rateDriver(Ride ride, Passenger passenger, Rating rating){
+        if(ride.getDriverRating() != null){
+            throw new IllegalStateException("Driver has been already rated");
+        }
         // validate if the passenger was part of ride
         if(ride.getPassenger() != passenger){
             throw new IllegalArgumentException("Passenger was not part of ride");
@@ -19,6 +22,9 @@ public class RatingService {
     }
 
     public void ratePassenger(Ride ride, Driver driver, Rating rating){
+        if(ride.getPassengerRating() != null){
+            throw new IllegalStateException("Passenger has been already rated");
+        }
         // validate if the passenger was part of ride
         if(ride.getDriver() != driver){
             throw new IllegalArgumentException("Driver was not part of ride");
