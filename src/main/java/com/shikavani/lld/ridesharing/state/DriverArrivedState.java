@@ -11,13 +11,11 @@ public final class DriverArrivedState extends AbstractRideState {
 
     @Override
     public RideState start(Ride ride) {
-        System.out.println("Your ride has started ...");
         return new RideStartedState();
     }
 
     @Override
     public RideState cancel(Ride ride) {
-        System.out.println("Ride has been cancelled.");
         releaseDriver(ride);
         return new RideCancelledState();
     }

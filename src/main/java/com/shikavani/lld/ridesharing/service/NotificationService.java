@@ -24,7 +24,7 @@ public class NotificationService implements RideObserver {
                 notifyDriver(ride, "Ride started");
             }
             case RIDE_COMPLETED -> {
-                notifyPassenger(ride, "Your ride has been completed");
+                notifyPassenger(ride, "Your ride has been completed. Thank you for riding with us.");
                 notifyDriver(ride, "Ride completed");
             }
             case RIDE_CANCELLED -> {

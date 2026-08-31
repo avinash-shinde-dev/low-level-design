@@ -11,7 +11,6 @@ public final class RideStartedState extends AbstractRideState {
 
     @Override
     public RideState complete(Ride ride) {
-        System.out.println("Your ride has completed. Thank you for riding with us");
         releaseDriver(ride);
         return new RideCompletedState();
     }

@@ -27,7 +27,6 @@ public final class RideRequestedState extends AbstractRideState {
 
     @Override
     public RideState cancel(Ride ride) {
-        System.out.println("Ride has been cancelled.");
         return new RideCancelledState();
     }
 }
