@@ -46,8 +46,9 @@ public class RideSharingApplication {
 
         FareCalculationService fareCalculationService = new FareCalculationService();
         NotificationService notificationService = new NotificationService();
+        RideRepository rideRepository = new RideRepository();
         // Ride Service
-        RideService rideService = new RideService(new RideRepository(), driverRepository, fareCalculationService, notificationService);
+        RideService rideService = new RideService(rideRepository, driverRepository, fareCalculationService, notificationService);
 
         // Driver Service
         DriverService driverService = new DriverService(driverRepository, rideService);
@@ -93,6 +94,9 @@ public class RideSharingApplication {
         ratingService.rateDriver(ride, passenger, new Rating(4));
         ratingService.ratePassenger(ride, driver2, new Rating(5));
 
+        RideHistoryService rideHistoryService = new RideHistoryService(rideRepository);
+        System.out.println("Passenger: " + ride.getPassenger().getName()  + " Ride history: " + rideHistoryService.findAllPassengerRides(ride.getPassenger().getUserId()));
+        System.out.println("Driver: " + ride.getDriver().getName() + " Ride history: " + rideHistoryService.findAllDriverRides(ride.getDriver().getUserId()));
 
     }
 }
