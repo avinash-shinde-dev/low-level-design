@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 
 public class Ride implements RideObservable {
 
@@ -146,33 +147,19 @@ public class Ride implements RideObservable {
         notifyObservers(new RideStateChangeEvent(this, oldStatus, this.rideState.status(), Instant.now()));
     }
 
-    public void arrived(){
-        RideStatus oldStatus = this.rideState.status();
-        this.rideState = this.rideState.driverArrived(this);
-        notifyObservers(new RideStateChangeEvent(this, oldStatus, this.rideState.status(), Instant.now()));
-    }
+    public void arrived(){ transition( s -> s.driverArrived(this));}
 
-    public void accept(){
-        RideStatus oldStatus = this.rideState.status();
-        this.rideState = this.rideState.accept(this);
-        notifyObservers(new RideStateChangeEvent(this, oldStatus, this.rideState.status(), Instant.now()));
-    }
+    public void accept(){transition(s -> s.accept(this));}
 
-    public void start(){
-        RideStatus oldStatus = this.rideState.status();
-        this.rideState = this.rideState.start(this);
-        notifyObservers(new RideStateChangeEvent(this, oldStatus, this.rideState.status(), Instant.now()));
-    }
+    public void start(){ transition(s -> s.start(this));}
 
-    public void complete(){
-        RideStatus oldStatus = this.rideState.status();
-        this.rideState = this.rideState.complete(this);
-        notifyObservers(new RideStateChangeEvent(this, oldStatus, this.rideState.status(), Instant.now()));
-    }
+    public void complete(){ transition(s -> s.complete(this));}
 
-    public void cancelled(){
+    public void cancelled(){ transition(s -> s.cancel(this));}
+
+    private void transition(Function<RideState, RideState> transitionFn){
         RideStatus oldStatus = this.rideState.status();
-        this.rideState = this.rideState.cancel(this);
+        this.rideState = transitionFn.apply(this.rideState);
         notifyObservers(new RideStateChangeEvent(this, oldStatus, this.rideState.status(), Instant.now()));
     }
 
