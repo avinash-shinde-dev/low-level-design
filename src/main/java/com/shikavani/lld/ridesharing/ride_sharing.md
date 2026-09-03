@@ -117,7 +117,6 @@ stateDiagram-v2
     DRIVER_ASSIGNED --> RIDE_CANCELLED : cancel
     DRIVER_ACCEPTED --> RIDE_CANCELLED : cancel
     DRIVER_ARRIVED --> RIDE_CANCELLED : cancel
-    RIDE_STARTED --> RIDE_CANCELLED : cancel
 
     RIDE_COMPLETED --> [*]
     RIDE_CANCELLED --> [*]
