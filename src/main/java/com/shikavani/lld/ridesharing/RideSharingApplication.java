@@ -15,10 +15,11 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalUnit;
+import java.util.List;
 
 public class RideSharingApplication {
 
-    public static void main(String[] args) throws PaymentNotAllowedException {
+    public static void main(String[] args) {
         // 1. create passenger
         Location passengerLocation = new Location(18.244, 57.324);
         Location passengerLocation2 = new Location(28.244, -37.324);
@@ -48,7 +49,7 @@ public class RideSharingApplication {
         NotificationService notificationService = new NotificationService();
         RideRepository rideRepository = new RideRepository();
         // Ride Service
-        RideService rideService = new RideService(rideRepository, driverRepository, fareCalculationService, notificationService);
+        RideService rideService = new RideService(rideRepository, driverRepository, fareCalculationService, List.of(notificationService));
 
         // Driver Service
         DriverService driverService = new DriverService(driverRepository, rideService);

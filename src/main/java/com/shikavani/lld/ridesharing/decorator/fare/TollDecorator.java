@@ -17,7 +17,7 @@ public class TollDecorator extends FareDecorator{
         Fare fareBeforeToll = this.decoratedFareCalculationStrategy.calculate(tripDetails);
 
         // validation
-        if(fareBeforeToll.getCurrency() != tollFees.getCurrency()){
+        if(!fareBeforeToll.getCurrency().equals(tollFees.getCurrency())){
             throw new IllegalArgumentException("Invalid currency");
         }
         Fare fareAfterToll = new Fare();

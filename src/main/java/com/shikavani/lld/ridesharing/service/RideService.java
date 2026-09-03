@@ -5,28 +5,31 @@ import com.shikavani.lld.ridesharing.enums.RideMatchingStrategyType;
 import com.shikavani.lld.ridesharing.enums.VehicleType;
 import com.shikavani.lld.ridesharing.factory.RideMatchingStrategyFactory;
 import com.shikavani.lld.ridesharing.model.*;
+import com.shikavani.lld.ridesharing.observer.RideObserver;
 import com.shikavani.lld.ridesharing.repository.DriverRepository;
 import com.shikavani.lld.ridesharing.repository.RideRepository;
 import com.shikavani.lld.ridesharing.strategies.ridematching.RideMatchingStrategy;
+
+import java.util.List;
 
 public class RideService {
 
     private final RideMatchingStrategy rideMatchingStrategy;
     private final RideRepository rideRepository;
     private final FareCalculationService fareCalculationService;
-    private final NotificationService notificationService;
+    private final List<RideObserver> rideObservers;
 
-    public RideService(RideRepository rideRepository, DriverRepository driverRepository, FareCalculationService fareCalculationService, NotificationService notificationService) {
+    public RideService(RideRepository rideRepository, DriverRepository driverRepository, FareCalculationService fareCalculationService, List<RideObserver> rideObservers) {
         this.rideMatchingStrategy = RideMatchingStrategyFactory.getRideMatchingStrategy(RideMatchingStrategyType.NEAREST_AVAILABLE, driverRepository);
         this.rideRepository = rideRepository;
         this.fareCalculationService = fareCalculationService;
-        this.notificationService = notificationService;
+        this.rideObservers = rideObservers;
     }
 
     public Ride requestRide(Passenger passenger, Location pickup, Location drop, VehicleType vehicleType ){
         // create the ride
         Ride ride = new Ride(passenger, pickup, drop, vehicleType);
-        ride.addObserver(notificationService);
+        rideObservers.forEach(rideObserver -> ride.addObserver(rideObserver));
         ride.requestRide();
         // Assign the driver
         attemptDriverAssignment(ride);

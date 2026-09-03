@@ -16,7 +16,7 @@ public class SurgeDecorator extends FareDecorator{
         Fare fareBeforeSurge = this.decoratedFareCalculationStrategy.calculate(tripDetails);
         // Add 20 units to the same currency as standard surge, we can extend it to RainSurgeFee, etc. and calculate
         // this dynamically.
-        if(fareBeforeSurge.getCurrency() != surgeFees.getCurrency()){
+        if(!fareBeforeSurge.getCurrency().equals(surgeFees.getCurrency())){
             throw new IllegalArgumentException("Invalid currency");
         }
         Fare fareAfterSurge = new Fare();

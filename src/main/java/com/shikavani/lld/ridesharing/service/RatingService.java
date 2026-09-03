@@ -13,7 +13,7 @@ public class RatingService {
             throw new IllegalStateException("Driver has been already rated");
         }
         // validate if the passenger was part of ride
-        if(ride.getPassenger() != passenger){
+        if(!ride.getPassenger().getUserId().equals(passenger.getUserId())){
             throw new IllegalArgumentException("Passenger was not part of ride");
         }
         validateRide(ride);
@@ -26,7 +26,7 @@ public class RatingService {
             throw new IllegalStateException("Passenger has been already rated");
         }
         // validate if the passenger was part of ride
-        if(ride.getDriver() != driver){
+        if(!ride.getDriver().getUserId().equals(driver.getUserId())){
             throw new IllegalArgumentException("Driver was not part of ride");
         }
         validateRide(ride);
