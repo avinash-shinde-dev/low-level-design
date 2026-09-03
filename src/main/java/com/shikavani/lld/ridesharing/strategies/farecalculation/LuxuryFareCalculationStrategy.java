@@ -7,6 +7,8 @@ import com.shikavani.lld.ridesharing.model.Rate;
 import com.shikavani.lld.ridesharing.model.TripDetails;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Currency;
 
 public class LuxuryFareCalculationStrategy implements FareCalculationStrategy{
@@ -19,7 +21,11 @@ public class LuxuryFareCalculationStrategy implements FareCalculationStrategy{
     @Override
     public Fare calculate(TripDetails tripDetails) {
         Rate rate = this.fareRateProvider.provide(FareCalculationStrategyType.LUXURY, tripDetails.vehicleType());
-        return new Fare(rate.baseFare().add(rate.perKmRate().multiply(BigDecimal.valueOf(tripDetails.distance()))), Currency.getInstance("INR"));
+        long durationMinutes = Duration.between(tripDetails.duration(), Instant.now()).toMinutes();
+        BigDecimal amount = rate.baseFare()
+                .add(rate.perKmRate().multiply(BigDecimal.valueOf(tripDetails.distance())))
+                .add(rate.perMinuteRate().multiply(BigDecimal.valueOf(durationMinutes)));
+        return new Fare(amount, Currency.getInstance("INR"));
     }
 
 }

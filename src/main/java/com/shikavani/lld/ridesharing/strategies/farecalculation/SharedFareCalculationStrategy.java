@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.util.Currency;
 
 public class SharedFareCalculationStrategy implements FareCalculationStrategy {
-
+    private static final BigDecimal SHARED_DISCOUNT_FACTOR = BigDecimal.valueOf(0.8);  // 20 % discount
     private final FareRateProvider fareRateProvider;
     public SharedFareCalculationStrategy(FareRateProvider fareRateProvider) {
         this.fareRateProvider = fareRateProvider;
@@ -18,7 +18,9 @@ public class SharedFareCalculationStrategy implements FareCalculationStrategy {
     @Override
     public Fare calculate(TripDetails tripDetails) {
         Rate rate = this.fareRateProvider.provide(FareCalculationStrategyType.SHARED, tripDetails.vehicleType());
-        return new Fare(rate.baseFare().add(rate.perKmRate().multiply(BigDecimal.valueOf(tripDetails.distance()))), Currency.getInstance("INR"));
+        BigDecimal amountPerPerson = rate.baseFare().add(rate.perKmRate().multiply(BigDecimal.valueOf(tripDetails.distance())));
+        BigDecimal amount = amountPerPerson.multiply(SHARED_DISCOUNT_FACTOR);
+        return new Fare(amount, Currency.getInstance("INR"));
     }
 
 }
