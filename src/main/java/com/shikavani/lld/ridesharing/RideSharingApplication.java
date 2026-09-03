@@ -96,9 +96,12 @@ public class RideSharingApplication {
         ratingService.ratePassenger(ride, driver2, new Rating(5));
 
         RideHistoryService rideHistoryService = new RideHistoryService(rideRepository);
+        ride.addObserver(rideHistoryService);
         System.out.println("Passenger: " + ride.getPassenger().getName()  + " Ride history: " + rideHistoryService.findAllPassengerRides(ride.getPassenger().getUserId()));
         System.out.println("Driver: " + ride.getDriver().getName() + " Ride history: " + rideHistoryService.findAllDriverRides(ride.getDriver().getUserId()));
 
+        Ride ride1 = rideRepository.findById(ride.getRideId());
+        System.out.println(ride1);
     }
 }
 
