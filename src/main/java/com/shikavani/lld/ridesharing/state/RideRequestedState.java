@@ -22,6 +22,7 @@ public final class RideRequestedState extends AbstractRideState {
         if (driver == null || driver.getVehicle() == null) {
             throw new IllegalArgumentException("An assigned driver must have a vehicle");
         }
+        driver.setStatus(DriverStatus.BUSY);
         return new DriverAssignedState();
     }
 

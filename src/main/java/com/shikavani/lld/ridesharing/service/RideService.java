@@ -66,7 +66,6 @@ public class RideService {
     private void attemptDriverAssignment(Ride ride) {
         this.rideMatchingStrategy.match(ride)
                 .ifPresent(driver -> {
-                    driver.setStatus(DriverStatus.BUSY);
                     ride.assignDriver(driver);
                 });
     }

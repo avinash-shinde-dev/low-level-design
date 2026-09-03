@@ -12,7 +12,6 @@ public final class DriverAssignedState extends AbstractRideState {
 
     @Override
     public RideState accept(Ride ride) {
-        ride.getDriver().setStatus(DriverStatus.BUSY);
         return new RideAcceptedState();
     }
 
