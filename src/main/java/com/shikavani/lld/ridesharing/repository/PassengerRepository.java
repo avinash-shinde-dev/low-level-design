@@ -10,7 +10,7 @@ public class PassengerRepository implements InMemoryRepository<String, Passenger
     private final Map<String, Passenger> passengerMap = new HashMap<>();
     @Override
     public void save(Passenger passenger) {
-        passengerMap.putIfAbsent(passenger.getUserId(), passenger);
+        passengerMap.put(passenger.getUserId(), passenger);
     }
 
     @Override

@@ -10,7 +10,7 @@ public class DriverRepository implements InMemoryRepository<String, Driver> {
     private final Map<String, Driver> driverMap = new HashMap<>();
     @Override
     public void save(Driver driver) {
-        driverMap.putIfAbsent(driver.getUserId(), driver);
+        driverMap.put(driver.getUserId(), driver);
     }
 
     @Override

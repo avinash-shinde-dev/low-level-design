@@ -10,7 +10,7 @@ public class RideRepository implements InMemoryRepository<String, Ride>{
     private final Map<String, Ride> rideMap = new HashMap<>();
     @Override
     public void save(Ride ride) {
-        rideMap.putIfAbsent(ride.getRideId(), ride);
+        rideMap.put(ride.getRideId(), ride);
     }
 
     @Override
