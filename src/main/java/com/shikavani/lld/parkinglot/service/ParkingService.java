@@ -47,10 +47,8 @@ public class ParkingService {
 
     public Receipt unpark(UnparkingRequest unparkingRequest){
         System.out.println("Unpark your vehicle ...");
-        Optional<ParkingSpot> spot = this.parkingSpotManager.findParkingSpot(unparkingRequest.ticket());
+        ParkingSpot parkingSpot = unparkingRequest.ticket().getSpot();
         // 1. find the parking spot
-        ParkingSpot parkingSpot = spot.orElseThrow(() -> new InvalidTicketException("Invalid ticket provided"));
-
         parkingSpot.unPark();
 
         this.ticketService.markTicketClosed(unparkingRequest.ticket());
