@@ -1,4 +1,6 @@
 package com.shikavani.lld.vendingmachine.enums;
 
-public class PaymentStatus {
+public enum PaymentMode {
+    CASH,
+    UPI
 }
