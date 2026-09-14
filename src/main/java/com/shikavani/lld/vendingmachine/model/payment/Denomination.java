@@ -1,9 +1,9 @@
-package com.shikavani.lld.vendingmachine.model;
+package com.shikavani.lld.vendingmachine.model.payment;
 
 import java.util.Currency;
 import java.util.Objects;
 
-public sealed class Denomination implements Comparable permits Coin, Note {
+public sealed class Denomination implements Comparable<Denomination> permits Coin, Note {
     private final Integer amount;
     private final Currency currency;
 
@@ -41,8 +41,8 @@ public sealed class Denomination implements Comparable permits Coin, Note {
     }
 
     @Override
-    public int compareTo(Object o) {
-        return this.getAmount().compareTo(((Denomination) o).getAmount());
+    public int compareTo(Denomination o) {
+        return this.getAmount().compareTo(o.getAmount());
     }
 }
 
