@@ -1,6 +1,6 @@
 package com.shikavani.lld.vendingmachine.enums;
 
-public enum PaymentMode {
+public enum PaymentType {
     CASH,
     UPI
 }
