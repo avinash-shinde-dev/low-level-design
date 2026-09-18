@@ -2,10 +2,22 @@ package com.shikavani.lld.snake_and_ladder.model;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-public class NormalDice extends Dice{
+public final class NormalDice implements Dice{
 
-    public NormalDice() {
-        super(6);
+    private static final int SIDE = 6;
+
+    @Override
+    public int getSides() {
+        return SIDE;
     }
 
+    /**
+     * ThreadLocalRandom.current() avoids contention/thread-safety issues you'd get
+     * from a single shared Random instance if multiple threads roll dice concurrently.
+     * @return random integer.
+     */
+    @Override
+    public int roll() {
+        return ThreadLocalRandom.current().nextInt(1, SIDE+1);
+    }
 }
