@@ -1,29 +1,51 @@
 package com.shikavani.lld.snake_and_ladder.model;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public record Board(int size, List<Snake> snakes, List<Ladder> ladders) {
+public final class Board {
 
-    @Override
-    public List<Snake> snakes() {
-        return List.copyOf(snakes);
+    private final int size;
+    private final List<Snake> snakes;
+    private final List<Ladder> ladders;
+    private final Map<Integer, Integer> snakeHeadToTail;
+    private final Map<Integer, Integer> ladderBaseToTop;
+
+    public Board(Builder builder){
+        this.size = builder.size;
+        this.snakes = List.copyOf(builder.snakes);
+        this.ladders = List.copyOf(builder.ladders);
+
+        Map<Integer, Integer> snakeMap = new HashMap<>();
+        for (Snake snake : this.snakes) {
+            snakeMap.put(snake.start(), snake.end());
+        }
+        this.snakeHeadToTail = Map.copyOf(snakeMap);
+
+        Map<Integer, Integer> ladderMap = new HashMap<>();
+        for (Ladder ladder : this.ladders) {
+            ladderMap.put(ladder.start(), ladder.end());
+        }
+        this.ladderBaseToTop = Map.copyOf(ladderMap);
+
     }
 
-    @Override
-    public List<Ladder> ladders() {
-        return List.copyOf(ladders);
+    public static Builder builder(int size) {
+        return  new Builder(size);
     }
 
-    public void addSnake(int start, int end) {
-        validate(start, "Start");
-        validate(end, "End");
-        this.snakes.add(new Snake(start, end));
+    public int getSize() {
+        return size;
     }
 
-    public void addLadder(int start, int end) {
-        validate(start, "Start");
-        validate(end, "End");
-        this.ladders.add(new Ladder(start, end));
+    public List<Snake> getSnakes() {
+        return snakes;
+    }
+
+    public List<Ladder> getLadders() {
+        return ladders;
     }
 
     public int movePosition(Player player, int steps){
@@ -45,9 +67,43 @@ public record Board(int size, List<Snake> snakes, List<Ladder> ladders) {
         return newPosition;
     }
 
-    private void validate(int value, String type) {
-        if (value < 1 || value > size) {
-            throw new IllegalArgumentException(String.format("%s value must be within range [ %s , %s", type, 1, size));
+    public static final class Builder {
+        private final int size;
+        private final List<Snake> snakes = new ArrayList<>();
+        private final List<Ladder> ladders = new ArrayList<>();
+
+        private Builder(int size) {
+            if (size <= 0) {
+                throw new IllegalArgumentException("Board size must be positive");
+            }
+            this.size = size;
         }
+
+        public Builder addSnake(int start, int end) {
+            validateWithinBounds(start, "Snake Start");
+            validateWithinBounds(end, "Snake End");
+            this.snakes.add(new Snake(start, end));
+            return this;
+        }
+
+        public Builder addLadder(int start, int end) {
+            validateWithinBounds(start, "Ladder Start");
+            validateWithinBounds(end, "Ladder End");
+            this.ladders.add(new Ladder(start, end));
+            return this;
+        }
+
+        public Board build(){
+             // validateNoDuplicateOrCyclicStarts();
+             return  new Board(this);
+        }
+
+        private void validateWithinBounds(int value, String label) {
+            if (value < 1 || value > size) {
+                throw new IllegalArgumentException(
+                        "%s value must be within range [1, %d], got %d".formatted(label, size, value));
+            }
+        }
+
     }
 }
