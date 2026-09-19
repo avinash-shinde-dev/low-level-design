@@ -1,4 +1,4 @@
-package com.shikavani.lld.snake_and_ladder.strategy.winning;
+package com.shikavani.lld.snake_and_ladder.strategy.win;
 
 import com.shikavani.lld.snake_and_ladder.model.Board;
 
