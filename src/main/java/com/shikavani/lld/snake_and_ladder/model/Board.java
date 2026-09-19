@@ -1,9 +1,7 @@
 package com.shikavani.lld.snake_and_ladder.model;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.shikavani.lld.snake_and_ladder.enums.MoveEvent;
+import java.util.*;
 
 public final class Board {
 
@@ -48,23 +46,24 @@ public final class Board {
         return ladders;
     }
 
-    public int movePosition(Player player, int steps){
-        int newPosition = player.getPosition() + steps;
-        for (Snake snake: this.snakes) {
-            if(newPosition == snake.start()){
-                System.out.printf("Player %s eaten by snake, and moved to %s", player.getName(), snake.end());
-               return snake.end();
-            }
+    public MoveOutcome resolvePosition(int currentPosition, int steps){
+        int rawPosition = currentPosition + steps;
+
+        if(rawPosition > size){
+            return new MoveOutcome(currentPosition, rawPosition, rawPosition, MoveEvent.NONE);
         }
 
-        for (Ladder ladder: this.ladders) {
-            if(newPosition == ladder.start()){
-                System.out.printf("Player %s got the ladder, and moved to %s", player.getName(), ladder.end() );
-                return ladder.end();
-            }
+        Integer snakeTail = snakeHeadToTail.get(rawPosition);
+        if(snakeTail != null){
+            return new MoveOutcome(currentPosition, rawPosition, snakeTail, MoveEvent.SNAKE_BITE);
         }
-        System.out.printf("Player %s moved to %s", player.getName(), newPosition);
-        return newPosition;
+
+        Integer ladderTop = ladderBaseToTop.get(rawPosition);
+        if(ladderTop != null){
+            return new MoveOutcome(currentPosition, rawPosition, ladderTop, MoveEvent.LADDER_CLIMB);
+        }
+
+        return new MoveOutcome(currentPosition, rawPosition, rawPosition, MoveEvent.NONE);
     }
 
     public static final class Builder {
@@ -94,9 +93,39 @@ public final class Board {
         }
 
         public Board build(){
-             // validateNoDuplicateOrCyclicStarts();
+             validateNoDuplicateOrCyclicStarts();
              return  new Board(this);
         }
+
+        private void validateNoDuplicateOrCyclicStarts() {
+            Set<Integer> starts = new HashSet<>();
+            for (Snake snake : snakes) {
+                if (!starts.add(snake.start())) {
+                    throw new IllegalArgumentException("Duplicate snake/ladder start cell: " + snake.start());
+                }
+            }
+            for (Ladder ladder : ladders) {
+                if (!starts.add(ladder.start())) {
+                    throw new IllegalArgumentException("Duplicate snake/ladder start cell: " + ladder.start());
+                }
+            }
+
+            Map<Integer, Integer> combined = new HashMap<>();
+            for (Snake snake : snakes) {
+                combined.put(snake.start(), snake.end());
+            }
+            for (Ladder ladder : ladders) {
+                combined.put(ladder.start(), ladder.end());
+            }
+
+            for (Map.Entry<Integer, Integer> entry : combined.entrySet()) {
+                if (combined.containsKey(entry.getValue()) && combined.get(entry.getValue()).equals(entry.getKey())) {
+                    throw new IllegalArgumentException(
+                            "Cycle detected between cells " + entry.getKey() + " and " + entry.getValue());
+                }
+            }
+        }
+
 
         private void validateWithinBounds(int value, String label) {
             if (value < 1 || value > size) {

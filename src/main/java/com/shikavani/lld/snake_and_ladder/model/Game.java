@@ -27,7 +27,7 @@ public class Game {
 
     /** Read-only view of current turn order; safe to expose since it can't be mutated. */
     public List<Player> getPlayers() {
-        return Collections.unmodifiableList(List.copyOf(players);
+        return Collections.unmodifiableList(List.copyOf(players));
     }
 
     public Dice getDice() {
