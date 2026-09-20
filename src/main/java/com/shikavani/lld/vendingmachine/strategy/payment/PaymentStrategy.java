@@ -1,8 +1,10 @@
-package com.shikavani.lld.vendingmachine.strategy;
+package com.shikavani.lld.vendingmachine.strategy.payment;
 
-import com.shikavani.lld.vendingmachine.model.PaymentRequest;
-import com.shikavani.lld.vendingmachine.model.PaymentResponse;
+import com.shikavani.lld.vendingmachine.enums.PaymentType;
+import com.shikavani.lld.vendingmachine.model.transaction.PaymentRequest;
+import com.shikavani.lld.vendingmachine.model.transaction.PaymentOutcome;
 
 public interface PaymentStrategy {
-    PaymentResponse pay(PaymentRequest request);
+    PaymentType type();
+    PaymentOutcome pay(PaymentRequest request);
 }
