@@ -1,8 +1,10 @@
-package com.shikavani.lld.vendingmachine.strategy.payment;
+package com.shikavani.lld.vendingmachine.model.transaction;
 
 import com.shikavani.lld.vendingmachine.model.payment.Denomination;
 import com.shikavani.lld.vendingmachine.model.payment.Money;
 import com.shikavani.lld.vendingmachine.model.Product;
+import com.shikavani.lld.vendingmachine.utils.MoneyCalculator;
+
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Map;
@@ -21,7 +23,7 @@ public final class Transaction {
 
     public Money addTender(Map<Denomination, Integer> denominations, Currency currency){
         denominations.forEach((d, q) -> tendered.merge(d, q, Integer::sum));
-        return new Money(BigDecimal.ZERO, currency).calculate(denominations);
+        return new MoneyCalculator(new Money(BigDecimal.ZERO, currency)).fromDenominations(denominations);
     }
 
     public Map<Denomination, Integer> getTender(){

@@ -1,6 +1,7 @@
-package com.shikavani.lld.vendingmachine.model.payment;
+package com.shikavani.lld.vendingmachine.model.transaction;
 
 import com.shikavani.lld.vendingmachine.enums.PaymentType;
+import com.shikavani.lld.vendingmachine.model.payment.Denomination;
 
 import java.util.Map;
 
