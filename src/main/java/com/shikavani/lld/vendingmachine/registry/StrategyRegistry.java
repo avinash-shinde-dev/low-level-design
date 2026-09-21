@@ -1,21 +1,40 @@
 package com.shikavani.lld.vendingmachine.registry;
 
-import com.shikavani.lld.vendingmachine.enums.PaymentType;
-import com.shikavani.lld.vendingmachine.strategy.payment.PaymentStrategy;
-
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class PaymentStrategyRegistry {
-    private final Map<PaymentType, PaymentStrategy> REGISTRY = new ConcurrentHashMap<>();
+public class StrategyRegistry<K, V> {
+    private final Map<K, V> registries;
 
-    private PaymentStrategyRegistry(){}
-
-    public void register(PaymentStrategy paymentStrategy){
-        this.REGISTRY.put(paymentStrategy.type(), paymentStrategy);
+    private StrategyRegistry(Map<K, V> registry){
+        registries = registry;
     }
 
-    public PaymentStrategy get(PaymentType paymentType){
-        this.REGISTRY.get(paymentType);
+    public static <K, V> Builder<K, V> builder() {
+        return new Builder<>();
+    }
+
+    public Optional<V> find(K key){
+        return Optional.ofNullable(registries.get(key));
+    }
+
+    public V getOrThrow(K key) {
+        return find(key)
+                .orElseThrow(() -> new IllegalArgumentException("No strategy registered for: " + key));
+    }
+
+    public static final class Builder<K, V> {
+        private final Map<K, V> entries = new ConcurrentHashMap<>();
+
+        public Builder<K, V> register(K key, V value){
+            this.entries.put(Objects.requireNonNull(key, "key"), Objects.requireNonNull(value, "value"));
+            return this;
+        }
+
+        public StrategyRegistry<K,V> build() {
+            return new StrategyRegistry(Map.copyOf(entries));
+        }
     }
 }
