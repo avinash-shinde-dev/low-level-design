@@ -1,7 +1,7 @@
 package com.shikavani.lld.vendingmachine.exception;
 
-public class ProductNotFoundException extends RuntimeException {
-    public ProductNotFoundException(String message) {
+public class ProductNotSelectedException extends RuntimeException {
+    public ProductNotSelectedException(String message) {
         super(message);
     }
 }
