@@ -1,6 +1,7 @@
 package com.shikavani.lld.librarymanagement.models;
 
 import com.shikavani.lld.librarymanagement.enums.MembershipStatus;
+import com.shikavani.lld.librarymanagement.models.fine.Fine;
 import com.shikavani.lld.librarymanagement.models.membership.Membership;
 import java.math.BigDecimal;
 import java.util.Currency;

@@ -40,6 +40,18 @@ public final class BookCopy {
         this.status = BookCopyStatus.REMOVED;
     }
 
+    public void markInTransit(){
+        this.status = BookCopyStatus.IN_TRANSIT;
+    }
+
+    public void markAvailable(){
+        this.status = BookCopyStatus.AVAILABLE;
+    }
+
+    public void markOnHold(){
+        this.status = BookCopyStatus.ON_HOLD;
+    }
+
     public Book getBook() {
         return book;
     }

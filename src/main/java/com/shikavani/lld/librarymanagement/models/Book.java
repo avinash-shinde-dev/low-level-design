@@ -1,7 +1,8 @@
 package com.shikavani.lld.librarymanagement.models;
 
 import com.shikavani.lld.librarymanagement.enums.Genre;
-import java.util.HashSet;
+
+import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -12,10 +13,12 @@ public final class Book {
     private String isbn;
     private final Set<Author> authors;
     private final Set<Genre> genres;
+    private final BigDecimal price;
     private Publisher publisher;
     private String publicationYear;
 
-    public Book(String title, String isbn, Set<Author> authors, Set<Genre> genres, Publisher publisher, String publicationYear) {
+    public Book(String title, String isbn, Set<Author> authors, Set<Genre> genres, BigDecimal price, Publisher publisher, String publicationYear) {
+        this.price = price;
         this.id = UUID.randomUUID().toString();
         this.title = Objects.requireNonNull(title, "Title is required");
         this.isbn = Objects.requireNonNull(isbn, "ISBN is required");
@@ -77,6 +80,10 @@ public final class Book {
 
     public void setPublicationYear(String publicationYear) {
         this.publicationYear = Objects.requireNonNull(publicationYear);
+    }
+
+    public BigDecimal getPrice() {
+        return price;
     }
 
     @Override
