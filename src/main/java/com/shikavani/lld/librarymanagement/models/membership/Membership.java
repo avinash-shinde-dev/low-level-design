@@ -1,7 +1,7 @@
 package com.shikavani.lld.librarymanagement.models.membership;
 
 import com.shikavani.lld.librarymanagement.enums.MembershipTier;
-import com.shikavani.lld.librarymanagement.models.Fine;
+import com.shikavani.lld.librarymanagement.models.fine.Fine;
 
 import java.util.Objects;
 
@@ -10,6 +10,7 @@ public abstract class Membership {
     private final Integer loanDurationDays;
     private Fine unpaidFineThreshold;
     private final Long pickupWindowHours;
+
     protected Membership(Integer maximumBorrows, Integer loanDurationDays, Fine unpaidFineThreshold, Long pickupWindowHours) {
         this.maximumBorrows = maximumBorrows;
         this.loanDurationDays = loanDurationDays;

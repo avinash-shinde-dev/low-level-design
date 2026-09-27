@@ -1,7 +1,7 @@
 package com.shikavani.lld.librarymanagement.models.membership;
 
 import com.shikavani.lld.librarymanagement.enums.MembershipTier;
-import com.shikavani.lld.librarymanagement.models.Fine;
+import com.shikavani.lld.librarymanagement.models.fine.Fine;
 
 public final class PremiumMembership extends Membership{
 
