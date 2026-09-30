@@ -1,0 +1,7 @@
+package com.shikavani.lld.librarymanagement.exception;
+
+public class HoldNotFoundException extends RuntimeException{
+    public HoldNotFoundException(String message) {
+        super(message);
+    }
+}
