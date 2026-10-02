@@ -1,5 +1,6 @@
 package com.shikavani.lld.librarymanagement.service;
 
+import com.shikavani.lld.librarymanagement.exception.TransactionNotFoundException;
 import com.shikavani.lld.librarymanagement.models.Transaction;
 import com.shikavani.lld.librarymanagement.repository.TransactionRepository;
 
@@ -17,6 +18,11 @@ public class TransactionService {
     public void saveTransaction(Transaction transaction){
         Objects.requireNonNull(transaction, "Transaction must not be null");
         this.transactionRepository.save(transaction);
+    }
+
+    public Transaction getById(String transactionId) {
+        return transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new TransactionNotFoundException("Transaction not found: " + transactionId));
     }
 
     public List<Transaction> findActiveTransaction(String memberId){
