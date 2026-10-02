@@ -34,8 +34,7 @@ public class ReturnService {
                 Lock lockOnCopy = lock.bookCopy(transaction.bookCopyId());
                 lockOnCopy.lock();
                 try {
-                    final String id = transaction.branchId() + ":" + transaction.bookCopyId();
-                    BookCopy copy = this.branchService.getBookCopy(id);
+                    BookCopy copy = this.branchService.getBookCopy(transaction.bookCopyId());
                     // if the return branch is not same as issued branch
                     if (!transaction.branchId().equals(branchId)) {
                         copy.markInTransit();
@@ -45,7 +44,7 @@ public class ReturnService {
 
                     // Here we should acquire lock on title
                     holdService.fulfillNextHold(copy).ifPresent(hold ->  {
-                        // TODO: Notify Member
+                        // TODO: Notify Member i.e Hold Available
                     });
 
                     // save to db

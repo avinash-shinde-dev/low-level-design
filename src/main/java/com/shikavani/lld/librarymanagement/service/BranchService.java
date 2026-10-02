@@ -59,7 +59,9 @@ public class BranchService {
         Lock lockOnCopy = lock.bookCopy(bookCopyId);
         lockOnCopy.lock();
         try{
-            this.bookCopyRepository.delete(bookCopyId);
+            BookCopy copy = getBookCopy(bookCopyId);
+            copy.markRemoved();  // throws borrow exception is the book is already borrowed
+            this.bookCopyRepository.save(copy);
         }finally {
             lockOnCopy.unlock();
         }
