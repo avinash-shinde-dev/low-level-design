@@ -11,7 +11,7 @@ public class BookCopyRepository implements InMemoryRepository<String, BookCopy> 
 
     @Override
     public void save(BookCopy bookCopy) {
-        this.bookCopyMap.put( bookCopy.getBranchId() + ":" + bookCopy.getBookCopyId(), bookCopy);
+        this.bookCopyMap.put(bookCopy.getBookCopyId(), bookCopy);
     }
 
     @Override

@@ -12,7 +12,7 @@ public class TransactionRepository implements InMemoryRepository<String, Transac
     private final Map<String, Transaction> transactionMap = new ConcurrentHashMap<>();
     @Override
     public void save(Transaction transaction) {
-        transactionMap.putIfAbsent(transaction.id(), transaction);
+        transactionMap.put(transaction.id(), transaction);
     }
 
     @Override
