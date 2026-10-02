@@ -71,6 +71,30 @@ public class BranchService {
         this.bookCopyRepository.save(copy);
     }
 
+    // When the book copy is in transit and received at one of the branch
+    public void receiveCopy(String copyId, String branchId){
+        Objects.requireNonNull(copyId, "copy Id must not be null");
+        Objects.requireNonNull(branchId, "branch Id must not be null");
+
+        final String bookId = getBookCopy(copyId).getBook().getId();
+        Lock lockOnTitle = lock.title(bookId);
+        lockOnTitle.lock();
+        try{
+            Lock lockOnCopy = lock.bookCopy(copyId);
+            lockOnCopy.lock();
+            try {
+                BookCopy copy = getBookCopy(copyId);
+                copy.arriveAt(branchId);
+                holdService.fulfillNextHold(copy);
+                bookCopyRepository.save(copy);
+            }finally {
+                lockOnCopy.unlock();
+            }
+        }finally {
+            lockOnTitle.unlock();
+        }
+    }
+
     public BookCopy getBookCopy(final String id){
         return this.bookCopyRepository.findById(id).orElseThrow(() -> new BookCopyNotAvailableException("Book copy didn't find in"));
     }

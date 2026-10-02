@@ -52,6 +52,14 @@ public final class BookCopy {
         this.status = BookCopyStatus.ON_HOLD;
     }
 
+    public void arriveAt(String destinationBranchId) {
+        if (!BookCopyStatus.IN_TRANSIT.equals(this.status)) {
+            throw new IllegalStateException("Only an IN_TRANSIT copy can arrive; current status: " + status);
+        }
+        this.branchId = Objects.requireNonNull(destinationBranchId);
+        this.status = BookCopyStatus.AVAILABLE;
+    }
+
     public Book getBook() {
         return book;
     }
