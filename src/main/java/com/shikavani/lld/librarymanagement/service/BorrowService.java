@@ -50,7 +50,7 @@ public class BorrowService {
                     member.incrementBorrows();
                     LocalDateTime issuedAt = LocalDateTime.now();
                     LocalDateTime dueAt = issuedAt.plusDays(member.getMembership().getLoanDurationDays());
-                    Transaction transaction = new Transaction(UUID.randomUUID().toString(), copy.getBookCopyId(), book.getId(), branchId, memberId, issuedAt, dueAt, null);
+                    Transaction transaction = new Transaction(UUID.randomUUID().toString(), copy.getBookCopyId(), book.getId(), branchId, memberId, issuedAt, dueAt, null, null);
                     this.transactionService.saveTransaction(transaction);
                     return transaction;
                 } finally {
@@ -77,6 +77,6 @@ public class BorrowService {
     private boolean isNotAllowed(Member member){
         return (member.isSuspended() ||
                 member.getUnpaidFines().compareTo(member.getMembership().getUnpaidFineThreshold()) > 0 ||
-                member.getCurrentBorrows().intValue() >= member.getMembership().getMaximumBorrows().intValue());
+                !member.hasFreeSlot());
     }
 }
