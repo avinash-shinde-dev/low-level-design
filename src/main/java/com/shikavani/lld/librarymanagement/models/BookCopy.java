@@ -45,6 +45,9 @@ public final class BookCopy {
     }
 
     public void markAvailable(){
+        if(this.status != BookCopyStatus.BORROWED){
+            throw new IllegalArgumentException("Can't change status to Avaialble since current status is not borrowed");
+        }
         this.status = BookCopyStatus.AVAILABLE;
     }
 
