@@ -16,11 +16,13 @@ public class FineCalculationService {
     private final MemberService memberService;
     private final CatalogService catalogService;
     private final FineDecorator chain;
+    private final BigDecimal dailyRate;
 
-    public FineCalculationService(MemberService memberService, CatalogService catalogService, FineDecorator chain) {
+    public FineCalculationService(MemberService memberService, CatalogService catalogService, FineDecorator chain, BigDecimal dailyRate) {
         this.memberService = memberService;
         this.catalogService = catalogService;
         this.chain = chain;
+        this.dailyRate = dailyRate;
     }
 
     public FineBreakdown calculate(Transaction transaction){
@@ -33,7 +35,7 @@ public class FineCalculationService {
 
         FineDetails fineDetails = new FineDetails(
                 overdueDays,
-                BigDecimal.valueOf(1.2), // daily rate 20%
+                BigDecimal.ONE.add(dailyRate), // daily rate 20%
                 member.getMembership().tier().getTierMultiplier(),
                 book.getPrice());
 
