@@ -5,7 +5,7 @@ import com.shikavani.lld.librarymanagement.models.fine.Fine;
 
 public final class BasicMembership extends Membership{
 
-    BasicMembership(Integer maximumBorrows, Integer loanDurationDays, Fine unpaidFineThreshold, Long pickupWindowHours) {
+    public BasicMembership(Integer maximumBorrows, Integer loanDurationDays, Fine unpaidFineThreshold, Long pickupWindowHours) {
         super(maximumBorrows, loanDurationDays, unpaidFineThreshold, pickupWindowHours);
     }
 
