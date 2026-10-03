@@ -10,7 +10,7 @@ public class HoldRepository implements InMemoryRepository<String, Hold> {
     private final Map<String, Hold> holdMap = new ConcurrentHashMap<>();
     @Override
     public void save(Hold hold) {
-        holdMap.putIfAbsent(hold.getHoldId(), hold);
+        holdMap.put(hold.getHoldId(), hold);
     }
 
     @Override
