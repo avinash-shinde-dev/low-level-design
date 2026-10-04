@@ -1,9 +1,8 @@
 package com.shikavani.lld.librarymanagement.decorator;
 
-import com.shikavani.lld.librarymanagement.models.fine.FineBreakdown;
-import com.shikavani.lld.librarymanagement.models.fine.FineDetails;
-import com.shikavani.lld.librarymanagement.models.fine.LineItem;
-
+import com.shikavani.lld.librarymanagement.models.FineBreakdown;
+import com.shikavani.lld.librarymanagement.models.FineDetails;
+import com.shikavani.lld.librarymanagement.models.LineItem;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;

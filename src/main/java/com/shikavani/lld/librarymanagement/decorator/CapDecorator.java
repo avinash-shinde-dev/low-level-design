@@ -1,7 +1,7 @@
 package com.shikavani.lld.librarymanagement.decorator;
 
-import com.shikavani.lld.librarymanagement.models.fine.FineBreakdown;
-import com.shikavani.lld.librarymanagement.models.fine.FineDetails;
+import com.shikavani.lld.librarymanagement.models.FineBreakdown;
+import com.shikavani.lld.librarymanagement.models.FineDetails;
 
 /** The total fine never goes above the price of the book. Put it OUTERMOST so it caps everything. */
 public class CapDecorator implements FineDecorator {

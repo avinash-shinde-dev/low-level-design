@@ -1,7 +1,7 @@
 package com.shikavani.lld.librarymanagement.decorator;
 
-import com.shikavani.lld.librarymanagement.models.fine.FineBreakdown;
-import com.shikavani.lld.librarymanagement.models.fine.FineDetails;
+import com.shikavani.lld.librarymanagement.models.FineBreakdown;
+import com.shikavani.lld.librarymanagement.models.FineDetails;
 
 /**
  * One fine rule. Rules are stacked like Russian dolls, each wrapping the one inside it, e.g.
