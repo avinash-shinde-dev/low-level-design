@@ -2,6 +2,9 @@ package com.shikavani.lld.librarymanagement.service;
 
 import com.shikavani.lld.librarymanagement.enums.BookCopyStatus;
 import com.shikavani.lld.librarymanagement.exception.BookCopyNotAvailableException;
+import com.shikavani.lld.librarymanagement.exception.BookCopyNotFoundException;
+import com.shikavani.lld.librarymanagement.exception.BorrowException;
+import com.shikavani.lld.librarymanagement.exception.BranchNotFoundException;
 import com.shikavani.lld.librarymanagement.models.Book;
 import com.shikavani.lld.librarymanagement.models.BookCopy;
 import com.shikavani.lld.librarymanagement.models.Branch;
@@ -13,122 +16,104 @@ import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
 
+/**
+ * Branches and their physical copies. The catalog (Book) is shared; copies belong to ONE branch.
+ * A new branch is just one more row: nothing else needs to change.
+ */
 public class BranchService {
-
     private final BranchRepository branchRepository;
-    private final BookCopyRepository bookCopyRepository;
     private final CatalogService catalogService;
+    private final BookCopyRepository bookCopyRepository;
     private final HoldService holdService;
     private final LockRegistry lock = LockRegistry.getInstance();
 
-    public BranchService(BranchRepository branchRepository, CatalogService catalogService, BookCopyRepository bookCopyRepository, MemberService memberService, HoldService holdService) {
-        this.branchRepository = Objects.requireNonNull(branchRepository, "branch repository must not be null");
-        this.bookCopyRepository = Objects.requireNonNull(bookCopyRepository, "Book copy repository must not be null");
-        this.catalogService = Objects.requireNonNull(catalogService, "CatalogService must not be null");
-        this.holdService = Objects.requireNonNull(holdService, "Hold Service must not be null");
+    public BranchService(BranchRepository branchRepository, CatalogService catalogService,
+                         BookCopyRepository bookCopyRepository, HoldService holdService) {
+        this.branchRepository = branchRepository;
+        this.catalogService = catalogService;
+        this.bookCopyRepository = bookCopyRepository;
+        this.holdService = holdService;
     }
 
-    public void addBookCopies(String branchId, String bookId, Integer count){
-        Lock lockOnBook = lock.title(bookId);
-        lockOnBook.lock();
+    public Branch addBranch(String name) {
+        Branch branch = new Branch(UUID.randomUUID().toString(), Objects.requireNonNull(name));
+        branchRepository.save(branch);
+        return branch;
+    }
+
+    public Branch getBranch(String branchId) {
+        Objects.requireNonNull(branchId, "Branch id must not be null");
+        return branchRepository.findById(branchId)
+                .orElseThrow(() -> new BranchNotFoundException("Branch not found: " + branchId));
+    }
+
+    /** Adds 'count' new copies at a branch. If members are waiting, the new copies go straight to them. */
+    public List<BookCopy> addBookCopies(String branchId, String bookId, int count) {
+        if (count <= 0) throw new IllegalArgumentException("count must be positive");
+        getBranch(branchId);
+        Book book = catalogService.getBook(bookId);
+
+        List<BookCopy> added = new ArrayList<>();
+        Lock bookLock = lock.book(bookId);
+        bookLock.lock();
         try {
-            Book book = this.catalogService.searchById(bookId);
-            List<BookCopy> copies = new ArrayList<>();
             for (int i = 0; i < count; i++) {
-                copies.add(new BookCopy(book, branchId));
-            }
-            // add it to repository
-            for(BookCopy copy: copies){
-                Lock lockOnCopy = lock.bookCopy(copy.getBookCopyId());
-                lockOnCopy.lock();
+                BookCopy copy = new BookCopy(book, branchId);
+                Lock copyLock = lock.bookCopy(copy.getBookCopyId());
+                copyLock.lock();
                 try {
-                    // once the new copy is added then it will directly goes to the head of the queue to fullfill
-                    holdService.fulfillNextHold(copy);
                     bookCopyRepository.save(copy);
-                }finally {
-                    lockOnCopy.unlock();
+                    holdService.fulfillNextHold(copy);        // no-op when nobody is waiting
+                } finally {
+                    copyLock.unlock();
                 }
+                added.add(copy);
             }
         } finally {
-            lockOnBook.unlock();
+            bookLock.unlock();
         }
-
+        return added;
     }
 
-    // What if librarian remove the book copy id which borrow service is issueing
-    public void removeBookCopy(String bookCopyId){
-        Lock lockOnCopy = lock.bookCopy(bookCopyId);
-        lockOnCopy.lock();
-        try{
+    /** Removes a copy from the inventory. A borrowed (or reserved) copy cannot be removed. */
+    public void removeBookCopy(String bookCopyId) {
+        Lock copyLock = lock.bookCopy(bookCopyId);
+        copyLock.lock();
+        try {
             BookCopy copy = getBookCopy(bookCopyId);
-            copy.markRemoved();  // throws borrow exception is the book is already borrowed
-            this.bookCopyRepository.save(copy);
-        }finally {
-            lockOnCopy.unlock();
-        }
-    }
-
-    public void saveCopy(BookCopy copy){
-        this.bookCopyRepository.save(copy);
-    }
-
-    // When the book copy is in transit and received at one of the branch
-    public void receiveCopy(String copyId, String branchId){
-        Objects.requireNonNull(copyId, "copy Id must not be null");
-        Objects.requireNonNull(branchId, "branch Id must not be null");
-
-        final String bookId = getBookCopy(copyId).getBook().getId();
-        Lock lockOnTitle = lock.title(bookId);
-        lockOnTitle.lock();
-        try{
-            Lock lockOnCopy = lock.bookCopy(copyId);
-            lockOnCopy.lock();
-            try {
-                BookCopy copy = getBookCopy(copyId);
-                copy.arriveAt(branchId);
-                holdService.fulfillNextHold(copy);
-                bookCopyRepository.save(copy);
-            }finally {
-                lockOnCopy.unlock();
+            if (copy.getStatus() == BookCopyStatus.BORROWED) {
+                throw new BorrowException("This copy is currently borrowed and cannot be removed");
             }
-        }finally {
-            lockOnTitle.unlock();
+            copy.changeStatus(BookCopyStatus.REMOVED);        // also rejects other invalid cases, e.g. ON_HOLD
+            bookCopyRepository.save(copy);
+        } finally {
+            copyLock.unlock();
         }
     }
 
-    public BookCopy getBookCopy(final String id){
-        return this.bookCopyRepository.findById(id).orElseThrow(() -> new BookCopyNotAvailableException("Book copy didn't find in"));
+    public void saveCopy(BookCopy copy) {
+        bookCopyRepository.save(copy);
     }
 
-    /**
-     *
-     * @param branchId
-     * @return count of available book copies against the book in the branch
-     */
-    public Map<String, Long> countAvailableBookCopies(String branchId){
-        return this.bookCopyRepository.findAll()
-                .stream()
-                .filter(bookCopy -> branchId.equals(bookCopy.getBranchId()))
-                .collect(Collectors.groupingBy(bookCopy ->
-                        bookCopy.getBook().getId(),
-                        Collectors.counting()
-                ));
+    public BookCopy getBookCopy(String copyId) {
+        return bookCopyRepository.findById(copyId)
+                .orElseThrow(() -> new BookCopyNotFoundException("Book copy not found: " + copyId));
     }
 
-    public BookCopy getAnyAvailableBookCopyFromBranch(String branchId, Book book) {
-        return this.bookCopyRepository.findAll()
-                .stream()
-                .filter(bookCopy -> branchId.equals(bookCopy.getBranchId()))
-                .filter(bookCopy -> BookCopyStatus.AVAILABLE.equals(bookCopy.getStatus()))
-                .filter(bookCopy -> book.equals(bookCopy.getBook()))
+    /** For one branch: bookId -> number of copies on the shelf right now. */
+    public Map<String, Long> countAvailableBookCopies(String branchId) {
+        return bookCopyRepository.findAll().stream()
+                .filter(c -> branchId.equals(c.getBranchId()) && c.getStatus() == BookCopyStatus.AVAILABLE)
+                .collect(Collectors.groupingBy(c -> c.getBook().getId(), Collectors.counting()));
+    }
+
+    /** Any copy of this book on the shelf at this branch, or BookCopyNotAvailableException. */
+    public BookCopy findAvailableCopy(String branchId, String bookId) {
+        return bookCopyRepository.findAll().stream()
+                .filter(c -> branchId.equals(c.getBranchId()))
+                .filter(c -> c.getBook().getId().equals(bookId))
+                .filter(c -> c.getStatus() == BookCopyStatus.AVAILABLE)
                 .findFirst()
-                .orElseThrow(() -> new BookCopyNotAvailableException("Book copy is not available"));
+                .orElseThrow(() -> new BookCopyNotAvailableException("No copy of this book is available at this branch"));
     }
-
-    public Branch getBranch(String branchId){
-        Objects.requireNonNull(branchId, "Branch Id must not be null");
-        return this.branchRepository.findById(branchId).orElseThrow(() -> new NoSuchElementException("Branch does not exists"));
-    }
-
-
 }

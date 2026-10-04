@@ -1,12 +1,15 @@
 package com.shikavani.lld.librarymanagement.service;
 
+import com.shikavani.lld.librarymanagement.enums.BookCopyStatus;
 import com.shikavani.lld.librarymanagement.exception.ReturnException;
-import com.shikavani.lld.librarymanagement.models.*;
-import com.shikavani.lld.librarymanagement.models.fine.Fine;
-import com.shikavani.lld.librarymanagement.models.fine.FineBreakdown;
+import com.shikavani.lld.librarymanagement.models.BookCopy;
+import com.shikavani.lld.librarymanagement.models.Member;
+import com.shikavani.lld.librarymanagement.models.Transaction;
+import com.shikavani.lld.librarymanagement.models.FineBreakdown;
 import com.shikavani.lld.librarymanagement.registry.LockRegistry;
 
-import java.util.Currency;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 
@@ -16,67 +19,72 @@ public class ReturnService {
     private final FineCalculationService fineCalculationService;
     private final TransactionService transactionService;
     private final MemberService memberService;
+    private final Clock clock;
     private final LockRegistry lock = LockRegistry.getInstance();
 
-    public ReturnService(BranchService branchService, HoldService holdService, FineCalculationService fineCalculationService, TransactionService transactionService, MemberService memberService) {
+    public ReturnService(BranchService branchService, HoldService holdService,
+                         FineCalculationService fineCalculationService, TransactionService transactionService,
+                         MemberService memberService, Clock clock) {
         this.branchService = branchService;
         this.holdService = holdService;
         this.fineCalculationService = fineCalculationService;
         this.transactionService = transactionService;
         this.memberService = memberService;
+        this.clock = clock;
     }
 
-    public Fine returnBook(Transaction transaction, String branchId) {
-        Objects.requireNonNull(transaction, "Transaction must not be null");
-        Objects.requireNonNull(branchId, "Branch Id must not be null");
-        // we can fail fast by check if branch exists or not?
-        Lock lockOnMember = lock.member(transaction.memberId());
-        lockOnMember.lock();
+    /**
+     * Return a book at ANY branch of the network.
+     * Decision: a copy returned at another branch simply becomes part of THAT branch's inventory
+     * (no IN_TRANSIT trip). If members are waiting for the title, the copy goes to the first one in
+     * the queue, otherwise it goes back on the shelf. The fine is saved on the transaction and added to
+     * the member's unpaid fines.
+     *
+     * @return the fine breakdown (total 0 when the book is on time)
+     */
+    public FineBreakdown returnBook(String transactionId, String branchId) {
+        Objects.requireNonNull(transactionId, "Transaction id must not be null");
+        branchService.getBranch(branchId); // Fail-Fast if the branch doesn't exist.
+
+        // The ids of a transaction never change, so reading it before locking is safe (we only need them to pick the locks)
+        Transaction snapshot = transactionService.getById(transactionId);
+
+        Lock memberLock = lock.member(snapshot.memberId());
+        memberLock.lock();
         try {
-            Lock lockOnTitle = lock.title(transaction.bookId());
-            lockOnTitle.lock();
+            Lock bookLock = lock.book(snapshot.bookId());
+            bookLock.lock();
             try {
-                Lock lockOnCopy = lock.bookCopy(transaction.bookCopyId());
-                lockOnCopy.lock();
+                Lock copyLock = lock.bookCopy(snapshot.bookCopyId());
+                copyLock.lock();
                 try {
-                    Transaction stored = this.transactionService.getById(transaction.id());
-                    // If book is already returned
-                    if (stored.returnTimeStamp() != null) {
+                    Transaction stored = transactionService.getById(transactionId);   // read again, now under the locks
+                    if (stored.isReturned()) {
                         throw new ReturnException("Transaction " + stored.id() + " has already been returned");
                     }
-                    BookCopy copy = this.branchService.getBookCopy(transaction.bookCopyId());
-                    Member member = this.memberService.getMemberById(transaction.memberId());
-                    // 1. calculate fine
-                    FineBreakdown breakdown = this.fineCalculationService.calculate(transaction);
+                    LocalDateTime returnedAt = LocalDateTime.now(clock);
+                    BookCopy copy = branchService.getBookCopy(stored.bookCopyId());
+                    Member member = memberService.getMemberById(stored.memberId());
+                    FineBreakdown fine = fineCalculationService.calculate(stored, returnedAt);
 
-                    // 2. if the return branch is not same as issued branch
-                    if (!transaction.branchId().equals(branchId)) {
-                        copy.markInTransit();
-                    } else {
-                        copy.markAvailable();
-                        // Here we should acquire lock on title
-                        holdService.fulfillNextHold(copy);
-                    }
+                    // copy: BORROWED -> AVAILABLE, then straight to the head of the hold queue if somebody waits
+                    copy.changeStatus(BookCopyStatus.AVAILABLE);
+                    copy.moveToBranch(branchId);
+                    holdService.fulfillNextHold(copy);
+                    branchService.saveCopy(copy);
 
-                    // save to db
-                    this.branchService.saveCopy(copy);
-                    // mark the transaction close
-                    Transaction txn = transaction.closeTransaction(breakdown);
-                    transactionService.saveTransaction(txn);
-
-                    // decrement the borrows
+                    transactionService.saveTransaction(stored.closeTransaction(fine, returnedAt));
                     member.decrementBorrows();
-
-                    return new Fine(breakdown.total(), Currency.getInstance("INR"));
-
+                    if (fine.total().signum() > 0) member.addUnpaidFine(fine.total());
+                    return fine;
                 } finally {
-                    lockOnCopy.unlock();
+                    copyLock.unlock();
                 }
             } finally {
-                lockOnTitle.unlock();
+                bookLock.unlock();
             }
         } finally {
-            lockOnMember.unlock();
+            memberLock.unlock();
         }
     }
 }

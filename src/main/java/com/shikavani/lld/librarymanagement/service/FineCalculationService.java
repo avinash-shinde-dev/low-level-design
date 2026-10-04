@@ -4,41 +4,34 @@ import com.shikavani.lld.librarymanagement.decorator.FineDecorator;
 import com.shikavani.lld.librarymanagement.models.Book;
 import com.shikavani.lld.librarymanagement.models.Member;
 import com.shikavani.lld.librarymanagement.models.Transaction;
-import com.shikavani.lld.librarymanagement.models.fine.FineBreakdown;
-import com.shikavani.lld.librarymanagement.models.fine.FineDetails;
+import com.shikavani.lld.librarymanagement.models.FineBreakdown;
+import com.shikavani.lld.librarymanagement.models.FineDetails;
 
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
+/** Collects the facts about a loan and hands them to the stack of fine rules. */
 public class FineCalculationService {
-
     private final MemberService memberService;
     private final CatalogService catalogService;
-    private final FineDecorator chain;
-    private final BigDecimal dailyRate;
+    private final FineDecorator rules;
+    private final BigDecimal dailyRate;      // e.g. 10 = Rs 10 per overdue day
 
-    public FineCalculationService(MemberService memberService, CatalogService catalogService, FineDecorator chain, BigDecimal dailyRate) {
+    public FineCalculationService(MemberService memberService, CatalogService catalogService,
+                                  FineDecorator rules, BigDecimal dailyRate) {
         this.memberService = memberService;
         this.catalogService = catalogService;
-        this.chain = chain;
+        this.rules = rules;
         this.dailyRate = dailyRate;
     }
 
-    public FineBreakdown calculate(Transaction transaction){
-
-        Member member = this.memberService.getMemberById(transaction.memberId());
-
-        Book book = this.catalogService.searchById(transaction.bookId());
-
-        long overdueDays = Duration.between(transaction.dueAt(), LocalDateTime.now()).toDays();
-
-        FineDetails fineDetails = new FineDetails(
-                overdueDays,
-                BigDecimal.ONE.add(dailyRate), // daily rate 20%
-                member.getMembership().tier().getTierMultiplier(),
-                book.getPrice());
-
-        return chain.calculateFine(fineDetails);
+    /** The fine if the loan were closed at 'asOf'. Only full overdue days count; never negative. */
+    public FineBreakdown calculate(Transaction transaction, LocalDateTime asOf) {
+        Member member = memberService.getMemberById(transaction.memberId());
+        Book book = catalogService.getBook(transaction.bookId());
+        long overdueDays = Math.max(0, Duration.between(transaction.dueAt(), asOf).toDays());
+        return rules.calculateFine(new FineDetails(
+                overdueDays, dailyRate, member.getMembership().fineMultiplier(), book.getPrice()));
     }
 }
