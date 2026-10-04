@@ -44,6 +44,10 @@ public class HoldService {
         if (hasActiveHold(memberId, bookId)) {
             throw new HoldException("Cannot place hold as member %s has already place hold");
         }
+        if (hasAvailableCopy(bookId)) {
+            throw new HoldException("A copy of this title is available; borrow it instead of placing a hold");
+        }
+
         Hold hold = new Hold(memberId, bookId, LocalDateTime.now());
         reservationQueue.computeIfAbsent(bookId, k -> new ArrayDeque<>()).add(hold);
         this.holdRepository.save(hold);
@@ -73,7 +77,9 @@ public class HoldService {
             // This means that this copy is on_hold to pick, we can assign the next Member
             if (hold.getStatus() == HoldStatus.READY_FOR_PICKUP) {
                 BookCopy copy = this.bookCopyRepository.findById(hold.getBookCopyId()).orElseThrow(() -> new BookCopyNotAvailableException(String.format("Book copy : %s not available", hold.getBookCopyId())));
-                this.fulfillNextHold(copy);
+                if(this.fulfillNextHold(copy).isEmpty()){
+                    copy.markAvailable();
+                }
                 this.bookCopyRepository.save(copy);
             }
             return true;
@@ -83,8 +89,21 @@ public class HoldService {
     }
 
     // the handoff; caller already holds the title lock
-    void offerToQueueIfAny(BookCopy copy) {
+    public void offerToQueueIfAny(BookCopy copy) {
         bookCopyQueue.offer(copy);
+    }
+
+    public void markFulfilled(String holdId){
+        Hold hold = this.holdRepository.findById(holdId)
+                .orElseThrow(() -> new HoldNotFoundException(String.format("Hold not found with id: %s", holdId)));
+        Lock lockOnTitle = lock.title(hold.getBookId());
+        lockOnTitle.lock();
+        try{
+            hold.setStatus(HoldStatus.FULFILLED);
+            this.holdRepository.save(hold);
+        }finally {
+            lockOnTitle.unlock();
+        }
     }
 
     public Optional<Hold> fulfillNextHold(BookCopy copy) {
@@ -129,6 +148,21 @@ public class HoldService {
             lockOnTitle.unlock();
         }
     }
+
+    public Optional<Hold> findReadyHold(String memberId, String bookId){
+        Lock lockOnTitle = lock.title(bookId);
+        lockOnTitle.lock();
+        try {
+            return this.holdRepository.findAll()
+                    .stream()
+                    .filter(hold -> memberId.equals(hold.getMemberId()) &&
+                            bookId.equals(hold.getBookId()) &&
+                            hold.getStatus() == HoldStatus.READY_FOR_PICKUP)
+                    .findFirst();
+        }finally {
+            lockOnTitle.unlock();
+        }
+    }
     private boolean hasActiveHold(String memberId, String bookId) {
 
         return this.holdRepository.findAll()
@@ -137,6 +171,11 @@ public class HoldService {
                         && bookId.equals(hold.getBookId())
                         && List.of(HoldStatus.READY_FOR_PICKUP, HoldStatus.WAITING).contains(hold.getStatus()));
 
+    }
+
+    private boolean hasAvailableCopy(String bookId) {
+        return this.bookCopyRepository.findAll().stream()
+                .anyMatch(c -> bookId.equals(c.getBook().getId()) && c.getStatus() == BookCopyStatus.AVAILABLE);
     }
 
     public void triggerNotificationForExpiredHolds() {

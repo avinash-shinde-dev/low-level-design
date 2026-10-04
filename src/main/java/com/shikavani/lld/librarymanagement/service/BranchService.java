@@ -42,8 +42,9 @@ public class BranchService {
                 Lock lockOnCopy = lock.bookCopy(copy.getBookCopyId());
                 lockOnCopy.lock();
                 try {
+                    // once the new copy is added then it will directly goes to the head of the queue to fullfill
+                    holdService.fulfillNextHold(copy);
                     bookCopyRepository.save(copy);
-                    holdService.offerToQueueIfAny(copy);
                 }finally {
                     lockOnCopy.unlock();
                 }

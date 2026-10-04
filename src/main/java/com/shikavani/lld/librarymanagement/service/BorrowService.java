@@ -7,6 +7,7 @@ import com.shikavani.lld.librarymanagement.models.*;
 import com.shikavani.lld.librarymanagement.registry.LockRegistry;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 
@@ -36,15 +37,26 @@ public class BorrowService {
             if (isNotAllowed(member)) {
                 throw new BorrowException(String.format("Member %s cannot borrow book as member might be suspended or unpaid fines are exceeding membership threshold", member.getName()));
             }
-            Book book = this.catalogService.searchFirst(BookCriteria.hasTitle(title)).orElseThrow(() -> new BookNotFoundException(String.format("Book: %s not found", title)));
+            Book book = this.catalogService.searchFirst(BookCriteria.hasTitle(title))
+                    .orElseThrow(() -> new BookNotFoundException(String.format("Book: %s not found", title)));
+
             Lock lockOnTitle = lock.title(book.getId());
             lockOnTitle.lock();
             try {
-                BookCopy copy = this.branchService.getAnyAvailableBookCopyFromBranch(branchId, book);
+                Optional<Hold> reservation = this.holdService.findReadyHold(memberId, book.getId());
+
+                BookCopy copy = reservation.isPresent() ? reservedCopyAt(branchId, reservation.get())
+                        : this.branchService.getAnyAvailableBookCopyFromBranch(branchId, book);
+
                 Lock lockOnCopy = lock.bookCopy(copy.getBookCopyId());
                 lockOnCopy.lock();
                 try {
-                    copy.markBorrowed();
+                    if(reservation.isPresent()){
+                        copy.markBorrowedFromHold();
+                        this.holdService.markFulfilled(reservation.get().getHoldId());
+                    }else {
+                        copy.markBorrowed();
+                    }
                     this.branchService.saveCopy(copy);
                     // increment the borrows counter
                     member.incrementBorrows();
@@ -66,6 +78,16 @@ public class BorrowService {
             lockOnMember.unlock();
         }
 
+    }
+
+    /** A reserved copy must be collected where it is waiting; tell the member where that is. */
+    private BookCopy reservedCopyAt(String branchId, Hold hold) {
+        BookCopy copy = this.branchService.getBookCopy(hold.getBookCopyId());
+        if (!copy.getBranchId().equals(branchId)) {
+            throw new BorrowException(String.format("Your reserved copy is waiting at branch %s",
+                    this.branchService.getBranch(copy.getBranchId()).name()));
+        }
+        return copy;
     }
 
     /**
