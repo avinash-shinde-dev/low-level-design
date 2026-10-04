@@ -5,18 +5,19 @@ import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
-public class InMemoryEventBus implements EventPublisher, EventSubscriber{
+/** Tiny event bus. A listener that fails never stops the other listeners or the caller. */
+public class InMemoryEventBus implements EventPublisher, EventSubscriber {
     private final List<Consumer<LibraryEvent>> listeners = new CopyOnWriteArrayList<>();
 
     @Override
     public void publish(LibraryEvent event) {
         Objects.requireNonNull(event, "event must not be null");
-        try{
-            for(Consumer<LibraryEvent> listener: listeners){
+        for (Consumer<LibraryEvent> listener : listeners) {
+            try {
                 listener.accept(event);
+            } catch (RuntimeException e) {       // try/catch is PER listener
+                System.out.println("Listener failed for " + event.getClass().getSimpleName() + ": " + e);
             }
-        }catch (RuntimeException exception){
-            System.out.printf("Listener Failed : %s %s%n", event.getClass().getSimpleName(), exception);
         }
     }
 
