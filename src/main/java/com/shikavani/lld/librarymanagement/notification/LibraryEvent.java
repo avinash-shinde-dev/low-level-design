@@ -3,7 +3,7 @@ package com.shikavani.lld.librarymanagement.notification;
 import com.shikavani.lld.librarymanagement.models.Hold;
 import com.shikavani.lld.librarymanagement.models.Member;
 import com.shikavani.lld.librarymanagement.models.Transaction;
-import com.shikavani.lld.librarymanagement.models.fine.FineBreakdown;
+import com.shikavani.lld.librarymanagement.models.FineBreakdown;
 
 /** Things that happen in the library and may need a notification. */
 public sealed interface LibraryEvent {
