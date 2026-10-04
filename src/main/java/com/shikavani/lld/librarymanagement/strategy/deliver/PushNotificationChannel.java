@@ -4,15 +4,12 @@ import com.shikavani.lld.librarymanagement.enums.ChannelType;
 import com.shikavani.lld.librarymanagement.exception.DeliveryException;
 import com.shikavani.lld.librarymanagement.notification.Notification;
 
-public class PushNotificationChannel implements DeliveryChannel{
+/** Pretend delivery: just prints. A real one would call an email / SMS / push provider. */
+public class PushNotificationChannel implements DeliveryChannel {
+    @Override public ChannelType type() { return ChannelType.PUSH; }
 
     @Override
-    public ChannelType type() {
-        return ChannelType.PUSH;
-    }
-
-    @Override
-    public void deliver(Notification notification) throws DeliveryException {
-        System.out.printf("Sending Push Notification to Member : %s : %s", notification.recipient(), notification.message());
+    public void deliver(Notification n) throws DeliveryException {
+        System.out.printf("[Push] to %s: %s%n", n.recipient().getName(), n.message());
     }
 }
