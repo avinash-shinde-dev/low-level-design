@@ -55,6 +55,13 @@ public final class BookCopy {
         this.status = BookCopyStatus.ON_HOLD;
     }
 
+    public void markBorrowedFromHold() {
+        if (!BookCopyStatus.ON_HOLD.equals(this.status)) {
+            throw new BorrowException("Cannot collect a reserved copy that is not on hold; current status: " + this.status);
+        }
+        this.status = BookCopyStatus.BORROWED;
+    }
+
     public void arriveAt(String destinationBranchId) {
         if (!BookCopyStatus.IN_TRANSIT.equals(this.status)) {
             throw new IllegalStateException("Only an IN_TRANSIT copy can arrive; current status: " + status);
