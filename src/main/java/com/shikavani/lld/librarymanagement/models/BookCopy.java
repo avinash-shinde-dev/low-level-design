@@ -1,84 +1,48 @@
 package com.shikavani.lld.librarymanagement.models;
 
 import com.shikavani.lld.librarymanagement.enums.BookCopyStatus;
-import com.shikavani.lld.librarymanagement.exception.BorrowException;
 
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
+import static com.shikavani.lld.librarymanagement.enums.BookCopyStatus.*;
+
+/** One physical copy. It belongs to exactly one branch and has a status. */
 public final class BookCopy {
-    private final String bookCopyId;
+
+    /** The ONLY allowed status changes. Anything else is rejected by changeStatus(). */
+    private static final Map<BookCopyStatus, Set<BookCopyStatus>> ALLOWED = Map.of(
+            AVAILABLE,  EnumSet.of(BORROWED, ON_HOLD, IN_TRANSIT, LOST, REMOVED),
+            BORROWED,   EnumSet.of(AVAILABLE, LOST),
+            ON_HOLD,    EnumSet.of(BORROWED, AVAILABLE),
+            IN_TRANSIT, EnumSet.of(AVAILABLE),
+            LOST,       EnumSet.of(REMOVED),
+            REMOVED,    EnumSet.noneOf(BookCopyStatus.class));
+
+    private final String bookCopyId = UUID.randomUUID().toString();
     private final Book book;
-    private String branchId;
-    private BookCopyStatus status;
+    private volatile String branchId;
+    private volatile BookCopyStatus status = AVAILABLE;
+
     public BookCopy(Book book, String branchId) {
-        this.bookCopyId = UUID.randomUUID().toString();
         this.book = Objects.requireNonNull(book, "Book must not be null");
-        this.branchId = Objects.requireNonNull(branchId, "Branch Id must not be null");
-        this.status = BookCopyStatus.AVAILABLE;
+        this.branchId = Objects.requireNonNull(branchId, "Branch id must not be null");
     }
 
-    public String getBookCopyId() {
-        return bookCopyId;
-    }
+    public String getBookCopyId() { return bookCopyId; }
+    public Book getBook() { return book; }
+    public String getBranchId() { return branchId; }
+    public BookCopyStatus getStatus() { return status; }
 
-    public BookCopyStatus getStatus() {
-        return status;
-    }
-
-    public void markBorrowed(){
-        if(!BookCopyStatus.AVAILABLE.equals(this.status)){
-            throw new BorrowException("Cannot borrow the book as it is currently not in available state");
+    /** Callers hold the copy's lock (see LockRegistry), so check-then-set is safe. */
+    public void changeStatus(BookCopyStatus next) {
+        if (!ALLOWED.get(status).contains(next)) {
+            throw new IllegalStateException("Invalid copy status change: " + status + " -> " + next);
         }
-        this.status = BookCopyStatus.BORROWED;
+        this.status = next;
     }
 
-    public void markRemoved(){
-        if(BookCopyStatus.BORROWED.equals(this.status)){
-            throw new BorrowException("Cannot removed book when it is already borrowed");
-        }
-        this.status = BookCopyStatus.REMOVED;
-    }
-
-    public void markInTransit(){
-        this.status = BookCopyStatus.IN_TRANSIT;
-    }
-
-    public void markAvailable(){
-        if(this.status != BookCopyStatus.BORROWED){
-            throw new IllegalArgumentException("Can't change status to Avaialble since current status is not borrowed");
-        }
-        this.status = BookCopyStatus.AVAILABLE;
-    }
-
-    public void markOnHold(){
-        this.status = BookCopyStatus.ON_HOLD;
-    }
-
-    public void markBorrowedFromHold() {
-        if (!BookCopyStatus.ON_HOLD.equals(this.status)) {
-            throw new BorrowException("Cannot collect a reserved copy that is not on hold; current status: " + this.status);
-        }
-        this.status = BookCopyStatus.BORROWED;
-    }
-
-    public void arriveAt(String destinationBranchId) {
-        if (!BookCopyStatus.IN_TRANSIT.equals(this.status)) {
-            throw new IllegalStateException("Only an IN_TRANSIT copy can arrive; current status: " + status);
-        }
-        this.branchId = Objects.requireNonNull(destinationBranchId);
-        this.status = BookCopyStatus.AVAILABLE;
-    }
-
-    public Book getBook() {
-        return book;
-    }
-
-    public String getBranchId() {
-        return branchId;
-    }
-
-    public void setBranchId(String branchId) {
-        this.branchId = branchId;
+    /** A copy returned at another branch simply becomes part of that branch's inventory. */
+    public void moveToBranch(String newBranchId) {
+        this.branchId = Objects.requireNonNull(newBranchId);
     }
 }
